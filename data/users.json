@@ -1,0 +1,19 @@
+[
+  {
+    "email": "butlershaun711@gmail.com",
+    "name": "Shaun",
+    "role": "rep",
+    "is_admin": false,
+    "pin_hash": "SKcSb_9is0TPA-nwcQB0FDO4aS5XEs18A-CWOqis8Xs",
+    "pin_salt": "UdtCeEvkg-PpvhOSsIfK_g",
+    "created_at": "2026-04-04T20:11:55.013Z"
+  },
+  {
+    "email": "theo@indirectimpact.com",
+    "name": "eivin",
+    "is_admin": false,
+    "pin_hash": "5fqn31TF9DIIcx0ZTIyF7UDeBGoxI3NxPpUlUL-0AUY",
+    "pin_salt": "bX3myPETBsHEZwYNi0QBwA",
+    "created_at": "2026-03-30T01:52:16.756Z"
+  }
+]
