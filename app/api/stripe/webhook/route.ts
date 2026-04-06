@@ -11,6 +11,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const stripeApiVersion: Stripe.LatestApiVersion =
   (process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion) ?? "2026-02-25.clover";
+const isProduction = process.env.NODE_ENV === "production";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
@@ -52,11 +53,13 @@ export async function POST(request: Request) {
       const session = await stripe.checkout.sessions.retrieve(sessionFromEvent.id, {
         expand: ["payment_intent", "customer"],
       });
-      console.log("Stripe checkout completed", {
-        id: session.id,
-        email: session.customer_email,
-        amount_total: session.amount_total,
-      });
+      if (!isProduction) {
+        console.info("Stripe checkout completed", {
+          id: session.id,
+          email: session.customer_email,
+          amount_total: session.amount_total,
+        });
+      }
 
       const email =
         session.customer_email ||
@@ -241,7 +244,9 @@ export async function POST(request: Request) {
       break;
     }
     default:
-      console.log(`Unhandled Stripe event: ${event.type}`);
+      if (!isProduction) {
+        console.info(`Unhandled Stripe event: ${event.type}`);
+      }
   }
 
   return NextResponse.json({ received: true });

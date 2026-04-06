@@ -21,6 +21,7 @@ import { PortalSwitcher } from "@/components/portal-switcher";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminPanel } from "@/components/admin-panel";
+import { UsersAdminPanel } from "@/components/users-admin-panel";
 import { defaultPricing, type PaneType, type Pricing, type StoryLevel } from "@/lib/pricing";
 import { computeQuote, type AddOnSelection, type QuoteSelections } from "@/lib/quote";
 
@@ -105,10 +106,13 @@ type ContactRecord = {
 };
 
 type UserRecord = {
-  email: string;
+  id: string;
+  email?: string;
   name?: string;
   role: "admin" | "rep" | "tech";
   is_admin: boolean;
+  phone?: string;
+  birthday?: string;
   created_at?: string;
 };
 
@@ -147,6 +151,8 @@ type TransactionRecord = {
 };
 
 export default function AdminPage() {
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [pricing, setPricing] = useState<Pricing>(defaultPricing);
   const [addonsConfig, setAddonsConfig] = useState<AddonConfig[]>([]);
   const [activePlan, setActivePlan] = useState<AppPlan>("pro");
@@ -201,16 +207,51 @@ export default function AdminPage() {
   const [contactStatus, setContactStatus] = useState<string | null>(null);
   const [emailLoaded, setEmailLoaded] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [usersError, setUsersError] = useState<string | null>(null);
   const [usersLoaded, setUsersLoaded] = useState(false);
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPin, setNewUserPin] = useState("");
-  const [newUserRole, setNewUserRole] = useState<UserRecord["role"]>("rep");
-  const [userStatus, setUserStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Admin | PureBin Window Cleaning";
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAuth() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          if (mounted) {
+            setIsAdmin(false);
+          }
+          return;
+        }
+        const payload = (await response.json()) as { user?: { role?: string } };
+        if (mounted) {
+          setIsAdmin(payload.user?.role === "admin");
+        }
+      } catch (err) {
+        console.error(err);
+        if (mounted) {
+          setIsAdmin(false);
+        }
+      } finally {
+        if (mounted) {
+          setAuthLoading(false);
+        }
+      }
+    }
+
+    void loadAuth();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
+
     let mounted = true;
     async function loadConfig() {
       try {
@@ -249,9 +290,13 @@ export default function AdminPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
+
     let mounted = true;
     async function loadQuotes() {
       try {
@@ -275,42 +320,53 @@ export default function AdminPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isAdmin]);
 
   const loadJobs = useCallback(async () => {
+    if (!isAdmin) {
+      return;
+    }
     setJobsError(null);
     setJobsLoading(true);
     try {
       const response = await fetch("/api/jobs", { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Unable to load jobs.");
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Unable to load jobs.");
       }
       const payload = (await response.json()) as { jobs: JobRecord[] };
       setJobs(payload.jobs ?? []);
     } catch (err) {
       console.error(err);
-      setJobsError("Unable to load jobs.");
+      setJobsError(err instanceof Error ? err.message : "Unable to load jobs.");
     } finally {
       setJobsLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   const loadTransactions = useCallback(async () => {
+    if (!isAdmin) {
+      return;
+    }
     setTransactionsError(null);
     try {
       const response = await fetch("/api/transactions", { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Unable to load transactions.");
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Unable to load transactions.");
       }
       const payload = (await response.json()) as { transactions: TransactionRecord[] };
       setTransactions(payload.transactions ?? []);
     } catch (err) {
       console.error(err);
-      setTransactionsError("Unable to load transactions.");
+      setTransactionsError(err instanceof Error ? err.message : "Unable to load transactions.");
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
     void loadJobs();
     void loadTransactions();
     const interval = window.setInterval(() => {
@@ -328,7 +384,7 @@ export default function AdminPage() {
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleFocus);
     };
-  }, [loadJobs, loadTransactions]);
+  }, [isAdmin, loadJobs, loadTransactions]);
 
   useEffect(() => {
     if (!toast) {
@@ -357,8 +413,6 @@ export default function AdminPage() {
   }, []);
 
   const loadUsers = useCallback(async () => {
-    setUsersError(null);
-    setUsersLoading(true);
     try {
       const response = await fetch("/api/users?all=true");
       if (!response.ok) {
@@ -374,27 +428,30 @@ export default function AdminPage() {
       setUsers(normalized);
     } catch (err) {
       console.error(err);
-      setUsersError("Unable to load users.");
-    } finally {
-      setUsersLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
     if (activeSection !== "email" || emailLoaded) {
       return;
     }
     void loadContacts();
     setEmailLoaded(true);
-  }, [activeSection, emailLoaded, loadContacts]);
+  }, [activeSection, emailLoaded, isAdmin, loadContacts]);
 
   useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
     if (usersLoaded) {
       return;
     }
     void loadUsers();
     setUsersLoaded(true);
-  }, [usersLoaded, loadUsers]);
+  }, [isAdmin, usersLoaded, loadUsers]);
 
   async function handleSendEmail() {
     setEmailStatus(null);
@@ -465,49 +522,6 @@ export default function AdminPage() {
     }
   }
 
-  async function handleCreateUser() {
-    setUserStatus(null);
-    if (!newUserEmail.trim()) {
-      setUserStatus("Email is required.");
-      return;
-    }
-    if (!newUserPin.trim()) {
-      setUserStatus("PIN is required.");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: newUserEmail.trim(),
-          name: newUserName.trim() || undefined,
-          pin: newUserPin.trim(),
-          role: newUserRole,
-        }),
-      });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Unable to create user.");
-      }
-
-      const payload = (await response.json()) as { user: UserRecord };
-      setUsers((prev) => [
-        { ...payload.user, role: payload.user.role ?? (payload.user.is_admin ? "admin" : "rep") },
-        ...prev,
-      ]);
-      setUserStatus("User created.");
-      setNewUserName("");
-      setNewUserEmail("");
-      setNewUserPin("");
-      setNewUserRole("rep");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to create user.";
-      setUserStatus(message);
-    }
-  }
-
   async function handleCreateJob() {
     setTestJobStatus(null);
     setTestJobError(null);
@@ -570,70 +584,6 @@ export default function AdminPage() {
       setTestJobError(message);
     } finally {
       setTestJobSaving(false);
-    }
-  }
-
-  async function handleDeleteUser(email: string) {
-    setUserStatus(null);
-    try {
-      const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Unable to delete user.");
-      }
-      setUsers((prev) => prev.filter((user) => user.email !== email));
-      setUserStatus("User deleted.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to delete user.";
-      setUserStatus(message);
-    }
-  }
-
-  async function handleResetPin(email: string) {
-    const pin = window.prompt("Enter a new 4-6 digit PIN:");
-    if (!pin) return;
-    setUserStatus(null);
-    try {
-      const response = await fetch("/api/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, pin }),
-      });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Unable to reset PIN.");
-      }
-      setUserStatus("PIN updated.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to reset PIN.";
-      setUserStatus(message);
-    }
-  }
-
-  async function handleUpdateRole(email: string, role: UserRecord["role"]) {
-    setUserStatus(null);
-    try {
-      const response = await fetch("/api/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role }),
-      });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Unable to update user.");
-      }
-      const payload = (await response.json()) as { user: UserRecord };
-      const normalized = {
-        ...payload.user,
-        role: payload.user.role ?? (payload.user.is_admin ? "admin" : "rep"),
-      };
-      setUsers((prev) => prev.map((user) => (user.email === email ? normalized : user)));
-      setUserStatus("User updated.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to update user.";
-      setUserStatus(message);
     }
   }
 
@@ -895,10 +845,10 @@ export default function AdminPage() {
   }, [addonsConfig]);
 
   const techUsers = useMemo(
-    () => users.filter((user) => user.role === "tech" || user.role === "admin"),
+    () => users.filter((user) => Boolean(user.email) && (user.role === "tech" || user.role === "admin")),
     [users]
   );
-  const repUsers = useMemo(() => users.filter((user) => user.role === "rep"), [users]);
+  const repUsers = useMemo(() => users.filter((user) => Boolean(user.email) && user.role === "rep"), [users]);
 
   const stats = useMemo(() => {
     const seenTransactions = new Set<string>();
@@ -958,9 +908,9 @@ export default function AdminPage() {
     }
 
     users
-      .filter((user) => user.role === "rep")
+      .filter((user) => user.role === "rep" && user.email)
       .forEach((user) => {
-        getRep(user.email, user.name || user.email, user.email);
+        getRep(user.email!, user.name || user.email!, user.email!);
       });
 
     quotes.forEach((quote) => {
@@ -1145,6 +1095,29 @@ export default function AdminPage() {
     { id: "email", label: "Email" },
     { id: "users", label: "Users" },
   ] as const;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#020817] px-4 py-10 text-white">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-sm text-slate-400">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#020817] px-4 py-10 text-white">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-slate-800 bg-[#0f172a] p-6">
+          <h1 className="text-xl font-semibold">Admin access required</h1>
+          <p className="mt-2 text-sm text-slate-400">
+            This page only works for admin sessions. Sign in with an admin account to load jobs, users, and admin tools.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: COLORS.page }}>
@@ -1789,109 +1762,7 @@ export default function AdminPage() {
           ) : null}
 
           {activeSection === "users" ? (
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
-            <CardHeader>
-              <CardTitle>Users</CardTitle>
-              <CardDescription>Create and manage sales rep logins.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {usersError ? <p className="text-sm text-destructive">{usersError}</p> : null}
-              {userStatus ? <p className="text-sm text-slate-400">{userStatus}</p> : null}
-
-              <div className="rounded-lg border p-4 space-y-3">
-                <p className="text-sm font-semibold">Add User</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="user-name">Name</Label>
-                    <Input
-                      id="user-name"
-                      value={newUserName}
-                      onChange={(event) => setNewUserName(event.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="user-email">Email</Label>
-                    <Input
-                      id="user-email"
-                      type="email"
-                      value={newUserEmail}
-                      onChange={(event) => setNewUserEmail(event.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="user-pin">PIN (4-6 digits)</Label>
-                    <Input
-                      id="user-pin"
-                      value={newUserPin}
-                      onChange={(event) => setNewUserPin(event.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="user-role">Role</Label>
-                    <select
-                      id="user-role"
-                      value={newUserRole}
-                      onChange={(event) => setNewUserRole(event.target.value as UserRecord["role"])}
-                      className="h-10 rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
-                    >
-                      <option value="rep">Rep</option>
-                      <option value="tech">Tech</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                </div>
-                <Button type="button" onClick={handleCreateUser}>
-                  Create User
-                </Button>
-              </div>
-
-              <Separator />
-
-              {usersLoading ? (
-                <p className="text-sm text-slate-400">Loading users...</p>
-              ) : users.length === 0 ? (
-                <p className="text-sm text-slate-400">No users yet.</p>
-              ) : (
-                <div className="grid gap-3">
-                  {users.map((user) => (
-                    <div key={user.email} className="rounded-lg border bg-[#0f172a] p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">{user.name || "Unnamed"}</p>
-                          <p className="text-xs text-slate-400">{user.email}</p>
-                          <p className="text-xs text-slate-400">Role: {user.role}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" variant="outline" size="sm" onClick={() => handleResetPin(user.email)}>
-                            Reset PIN
-                          </Button>
-                          <select
-                            value={user.role}
-                            onChange={(event) =>
-                              handleUpdateRole(user.email, event.target.value as UserRecord["role"])
-                            }
-                            className="h-9 rounded-md border border-slate-800 bg-[#0f172a] px-2 text-xs text-white"
-                          >
-                            <option value="rep">Rep</option>
-                            <option value="tech">Tech</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.email)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <UsersAdminPanel />
           ) : null}
 
           {activeSection === "pricing" ? (

@@ -164,9 +164,9 @@ export async function getRepStats(viewerEmail?: string | null): Promise<RepStats
   }
 
   users
-    .filter((user) => normalizeUserRole(user) === "rep")
+    .filter((user) => normalizeUserRole(user) === "rep" && user.email)
     .forEach((user) => {
-      upsertRep(user.name || user.email, user.email);
+      upsertRep(user.name || user.email!, user.email!);
     });
 
   quotes.forEach((quote: QuoteRecord) => {

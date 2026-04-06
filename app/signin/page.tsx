@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import SignInForm from "./SignInForm";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Sign In",
+};
 
 type SignInPageProps = {
   searchParams?: Promise<{

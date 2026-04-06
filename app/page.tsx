@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
 import { PriceCalculator } from "@/components/price-calculator";
 import { SiteHeader } from "@/components/site-header";
 import { MapPin, Shield, Star } from "lucide-react";
 import { readPricing } from "@/lib/pricing-store";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Rep Portal",
+};
 
 export default async function HomePage() {
   const pricing = await readPricing();

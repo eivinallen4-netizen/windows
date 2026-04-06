@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { PriceCalculator } from "@/components/price-calculator";
 import { SiteHeader } from "@/components/site-header";
 import { readPricing } from "@/lib/pricing-store";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Quote Builder",
+};
 
 export default async function QuotePage() {
   const pricing = await readPricing();

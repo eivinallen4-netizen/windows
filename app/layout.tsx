@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 function getMetadataBase() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000";
+  const configuredUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const siteUrl =
+    configuredUrl && !configuredUrl.includes("localhost")
+      ? configuredUrl
+      : vercelUrl
+        ? `https://${vercelUrl.replace(/^https?:\/\//, "")}`
+        : "http://localhost:3000";
 
   try {
     return new URL(siteUrl);
@@ -52,7 +59,7 @@ export default function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         {children}
         <SpeedInsights />
-        <Analytics/>
+        <Analytics />
       </body>
     </html>
   );

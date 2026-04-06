@@ -1,7 +1,11 @@
+import type { Metadata } from "next";
 import { RepDashboard } from "@/components/rep-dashboard";
 import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Rep Stats",
+};
 
 export default function RepStatsPage() {
   return (

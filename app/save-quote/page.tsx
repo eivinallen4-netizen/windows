@@ -78,6 +78,10 @@ export default function SaveQuotePage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [addressQuery, setAddressQuery] = useState("");
+
+  useEffect(() => {
+    document.title = "Save Quote | PureBin Window Cleaning";
+  }, []);
   const [addressSuggestions, setAddressSuggestions] = useState<
     { id: string; label: string; details?: QuoteUser["addressDetails"] }[]
   >([]);

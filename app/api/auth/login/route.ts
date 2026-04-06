@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, verifyPin } from "@/lib/auth";
-import { findUserByEmail, readUsers } from "@/lib/users";
+import { findUserByEmail, readUsers, writeUsers } from "@/lib/users";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +39,11 @@ export async function POST(request: Request) {
     const adminName = process.env.ADMIN_NAME?.trim() || "Admin";
 
     let userName = "";
+    let userId = "env-admin";
     let role: "admin" | "rep" | "tech" = "rep";
+    let phone: string | undefined;
+    let birthday: string | undefined;
+    let profileCompletedAt: string | undefined;
 
     if (adminEmail && adminPin && email === adminEmail && pin === adminPin) {
       userName = adminName;
@@ -56,20 +60,34 @@ export async function POST(request: Request) {
       }
       userName = user.name ?? "";
       role = user.role ?? (user.is_admin ? "admin" : "rep");
+      userId = user.id;
+      phone = user.phone;
+      birthday = user.birthday;
+      profileCompletedAt = user.profile_completed_at;
+      user.last_signed_in_at = new Date().toISOString();
+      await writeUsers(users);
     }
 
     const token = await createSessionToken({
+      userId,
       email,
       name: userName || undefined,
       role,
+      phone,
+      birthday,
+      profile_completed_at: profileCompletedAt,
       is_admin: role === "admin",
     });
 
     const response = NextResponse.json({
       user: {
+        id: userId,
         email,
         name: userName || undefined,
         role,
+        phone,
+        birthday,
+        profile_completed_at: profileCompletedAt,
         is_admin: role === "admin",
       },
     });

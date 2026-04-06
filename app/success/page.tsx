@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import SuccessClient from "./SuccessClient";
 
 export const dynamic = "force-dynamic";
@@ -18,4 +19,11 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const type = resolvedSearchParams?.type === "quote" ? "quote" : "purchase";
 
   return <SuccessClient sessionId={sessionId} type={type} />;
+}
+
+export async function generateMetadata({ searchParams }: SuccessPageProps): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  return {
+    title: resolvedSearchParams?.type === "quote" ? "Quote Sent" : "Payment Successful",
+  };
 }

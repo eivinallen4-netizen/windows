@@ -2,9 +2,13 @@ const SESSION_COOKIE = "pb_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 
 export type AuthSession = {
+  userId: string;
   email: string;
   name?: string;
   role: "admin" | "rep" | "tech";
+  phone?: string;
+  birthday?: string;
+  profile_completed_at?: string;
   is_admin: boolean;
   exp: number;
 };

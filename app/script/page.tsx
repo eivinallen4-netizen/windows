@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 
 const scriptPdfPath = "/window%20cleaning%20%20pitch.pdf";
+export const metadata: Metadata = {
+  title: "Script",
+};
 
 export default function ScriptPage() {
   return (

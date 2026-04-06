@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { ReviewShowcaseCard } from "@/components/review-showcase-card";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getReviews } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Reviews",
+};
 
 export default async function ReviewsPage() {
   const reviews = await getReviews();

@@ -9,9 +9,13 @@ import Image from "next/image";
 import { PortalSwitcher } from "@/components/portal-switcher";
 
 type AuthUser = {
+  id: string;
   email: string;
   name?: string;
   role: "admin" | "rep" | "tech";
+  phone?: string;
+  birthday?: string;
+  profile_completed_at?: string;
   is_admin: boolean;
 };
 
@@ -159,6 +163,13 @@ export function SiteHeader() {
                           </Link>
                         </>
                       ) : null}
+                      <Link
+                        href="/account"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        Account
+                      </Link>
                       <button
                         type="button"
                         className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -224,6 +235,16 @@ export function SiteHeader() {
                         </Link>
                       </>
                     ) : null}
+                    <Link
+                      href="/account"
+                      className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
+                      onClick={() => {
+                        setAccountMenuOpen(false);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Account
+                    </Link>
                     <button
                       type="button"
                       className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700"

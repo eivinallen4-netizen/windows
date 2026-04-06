@@ -99,6 +99,10 @@ export default function TechPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Tech Portal | PureBin Window Cleaning";
+  }, []);
+
+  useEffect(() => {
     async function loadJobs() {
       setLoading(true);
       setError(null);
