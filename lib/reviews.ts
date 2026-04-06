@@ -1,5 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { deleteStoredObject, toPublicObjectUrl } from "@/lib/object-storage";
+import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type AcquisitionType = "They called us" | "We knocked";
 
@@ -26,76 +28,121 @@ type StoredReview = Partial<Review> & {
 
 const dataDir = path.join(process.cwd(), "data");
 const dataFilePath = path.join(dataDir, "reviews.json");
-const uploadsDir = path.join(process.cwd(), "public", "uploads");
 
-async function ensureStorage() {
-  await fs.mkdir(dataDir, { recursive: true });
-  await fs.mkdir(uploadsDir, { recursive: true });
+function normalizeReview(item: StoredReview): Review | null {
+  const acquisitionRaw = String(item.acquisitionType ?? "").toLowerCase();
+  const acquisitionType: AcquisitionType =
+    acquisitionRaw.includes("knock") ? "We knocked" : "They called us";
 
-  try {
-    await fs.access(dataFilePath);
-  } catch {
-    await fs.writeFile(dataFilePath, "[]", "utf8");
+  const houseBeforePhotoUrl =
+    item.houseBeforePhotoUrl || item.housePhotoUrl || item.photoUrl || "/uploads/sample-house-1.svg";
+
+  if (!item.id || !item.name || !item.rating || !item.panels || !item.createdAt) {
+    return null;
   }
+
+  return {
+    id: item.id,
+    name: item.name,
+    rating: item.rating,
+    panels: item.panels,
+    acquisitionType,
+    testimonial: item.testimonial,
+    job_id: item.job_id,
+    tech_email: item.tech_email,
+    createdAt: item.createdAt,
+    houseBeforePhotoUrl,
+    houseAfterPhotoUrl: item.houseAfterPhotoUrl,
+    customerPhotoUrl: item.customerPhotoUrl || item.photoUrl,
+  };
 }
 
-export async function getReviews(): Promise<Review[]> {
-  await ensureStorage();
-  const raw = await fs.readFile(dataFilePath, "utf8");
+function materializeReview(review: Review): Review {
+  return {
+    ...review,
+    customerPhotoUrl: toPublicObjectUrl(review.customerPhotoUrl),
+    houseBeforePhotoUrl: toPublicObjectUrl(review.houseBeforePhotoUrl) || "/uploads/sample-house-1.svg",
+    houseAfterPhotoUrl: toPublicObjectUrl(review.houseAfterPhotoUrl),
+  };
+}
+
+async function getStoredReviews(): Promise<Review[]> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute("SELECT data FROM reviews ORDER BY created_at DESC, id DESC");
+    return result.rows
+      .map((row) => {
+        try {
+          return normalizeReview(JSON.parse(String(row.data)) as StoredReview);
+        } catch {
+          return null;
+        }
+      })
+      .filter((entry): entry is Review => Boolean(entry));
+  }
 
   try {
+    const raw = await fs.readFile(dataFilePath, "utf8");
     const parsed = JSON.parse(raw) as StoredReview[];
-    const normalized = parsed.reduce<Review[]>((acc, item) => {
-        const acquisitionRaw = String(item.acquisitionType ?? "").toLowerCase();
-        const acquisitionType: AcquisitionType =
-          acquisitionRaw.includes("knock")
-            ? "We knocked"
-            : "They called us";
-
-        const houseBeforePhotoUrl =
-          item.houseBeforePhotoUrl || item.housePhotoUrl || item.photoUrl || "/uploads/sample-house-1.svg";
-
-        if (!item.id || !item.name || !item.rating || !item.panels || !item.createdAt) {
-          return acc;
-        }
-
-        acc.push({
-          id: item.id,
-          name: item.name,
-          rating: item.rating,
-          panels: item.panels,
-          acquisitionType,
-          testimonial: item.testimonial,
-          job_id: item.job_id,
-          tech_email: item.tech_email,
-          createdAt: item.createdAt,
-          houseBeforePhotoUrl,
-          houseAfterPhotoUrl: item.houseAfterPhotoUrl,
-          customerPhotoUrl: item.customerPhotoUrl || item.photoUrl,
-        });
-        return acc;
-      }, []);
-
-    return normalized.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return parsed
+      .map(normalizeReview)
+      .filter((entry): entry is Review => Boolean(entry));
   } catch {
     return [];
   }
 }
 
+export async function getReviews(): Promise<Review[]> {
+  const reviews = await getStoredReviews();
+  return reviews.map(materializeReview);
+}
+
+export async function getStoredReviewById(id: string): Promise<Review | null> {
+  const reviews = await getStoredReviews();
+  return reviews.find((review) => review.id === id) ?? null;
+}
+
 export async function saveReviews(reviews: Review[]) {
-  await ensureStorage();
+  if (hasTursoConfig()) {
+    await tursoExecute("DELETE FROM reviews");
+    for (const review of reviews) {
+      await tursoExecute({
+        sql: "INSERT INTO reviews (id, created_at, job_id, tech_email, data) VALUES (?, ?, ?, ?, ?)",
+        args: [
+          review.id,
+          review.createdAt,
+          review.job_id ?? null,
+          review.tech_email ?? null,
+          JSON.stringify(review),
+        ],
+      });
+    }
+    return;
+  }
+
+  await fs.mkdir(dataDir, { recursive: true });
   await fs.writeFile(dataFilePath, JSON.stringify(reviews, null, 2), "utf8");
 }
 
 export async function addReview(review: Review): Promise<Review> {
-  const reviews = await getReviews();
+  const reviews = await getStoredReviews();
   reviews.push(review);
   await saveReviews(reviews);
-  return review;
+  return materializeReview(review);
+}
+
+export async function updateReview(review: Review): Promise<Review> {
+  const reviews = await getStoredReviews();
+  const index = reviews.findIndex((entry) => entry.id === review.id);
+  if (index === -1) {
+    throw new Error("Review not found.");
+  }
+  reviews[index] = review;
+  await saveReviews(reviews);
+  return materializeReview(review);
 }
 
 export async function deleteReviewById(id: string): Promise<Review | null> {
-  const reviews = await getReviews();
+  const reviews = await getStoredReviews();
   const target = reviews.find((review) => review.id === id) ?? null;
 
   if (!target) {
@@ -105,23 +152,9 @@ export async function deleteReviewById(id: string): Promise<Review | null> {
   const remaining = reviews.filter((review) => review.id !== id);
   await saveReviews(remaining);
 
-  const urls = [target.customerPhotoUrl, target.houseBeforePhotoUrl, target.houseAfterPhotoUrl];
-  for (const url of urls) {
-    if (!url || !url.startsWith("/uploads/")) {
-      continue;
-    }
-    const filename = path.basename(url);
-    const filePath = path.join(uploadsDir, filename);
-    try {
-      await fs.unlink(filePath);
-    } catch {
-      // File may be static sample or already removed.
-    }
-  }
+  await deleteStoredObject(target.customerPhotoUrl);
+  await deleteStoredObject(target.houseBeforePhotoUrl);
+  await deleteStoredObject(target.houseAfterPhotoUrl);
 
-  return target;
-}
-
-export function getUploadsDir() {
-  return uploadsDir;
+  return materializeReview(target);
 }

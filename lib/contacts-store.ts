@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type ContactRecord = {
   id: string;
@@ -14,6 +15,19 @@ export type ContactRecord = {
 const CONTACTS_PATH = path.join(process.cwd(), "data", "contacts.json");
 
 export async function readContacts(): Promise<ContactRecord[]> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute("SELECT data FROM contacts ORDER BY created_at DESC, email ASC");
+    return result.rows
+      .map((row) => {
+        try {
+          return JSON.parse(String(row.data)) as ContactRecord;
+        } catch {
+          return null;
+        }
+      })
+      .filter((entry): entry is ContactRecord => Boolean(entry));
+  }
+
   try {
     const data = await fs.readFile(CONTACTS_PATH, "utf8");
     const parsed = JSON.parse(data);
@@ -28,6 +42,17 @@ export async function readContacts(): Promise<ContactRecord[]> {
 }
 
 export async function writeContacts(contacts: ContactRecord[]) {
+  if (hasTursoConfig()) {
+    await tursoExecute("DELETE FROM contacts");
+    for (const contact of contacts) {
+      await tursoExecute({
+        sql: "INSERT INTO contacts (id, email, created_at, data) VALUES (?, ?, ?, ?)",
+        args: [contact.id, contact.email.toLowerCase(), contact.created_at, JSON.stringify(contact)],
+      });
+    }
+    return;
+  }
+
   await fs.mkdir(path.dirname(CONTACTS_PATH), { recursive: true });
   await fs.writeFile(CONTACTS_PATH, JSON.stringify(contacts, null, 2), "utf8");
 }

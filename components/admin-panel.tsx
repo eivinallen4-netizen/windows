@@ -310,10 +310,10 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
             <div key={review.id} className="rounded-lg border border-slate-800 bg-[#0f172a] p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={review.customerPhotoUrl} alt={review.name} />
+                    <Avatar>
+                      <AvatarImage src={review.customerPhotoUrl} alt={review.name} />
                     <AvatarFallback className="bg-[#1e293b]">
-                      <Image src="/logo.png" alt="BlueSky logo" width={20} height={20} className="size-5 object-contain" />
+                      <Image src="/logo.png" alt="PureBin logo" width={20} height={20} className="size-5 object-contain" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">

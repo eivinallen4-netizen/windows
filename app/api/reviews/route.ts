@@ -1,8 +1,7 @@
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
-import { addReview, getReviews, getUploadsDir, Review } from "@/lib/reviews";
+import { uploadPhotoFile } from "@/lib/job-review";
+import { addReview, getReviews, type Review } from "@/lib/reviews";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,28 +39,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "House before photo is required." }, { status: 400 });
     }
 
-    async function uploadFile(file: File) {
-      const uploadsDir = getUploadsDir();
-      await fs.mkdir(uploadsDir, { recursive: true });
-
-      const extensionFromName = path.extname(file.name).replace(".", "").toLowerCase();
-      const extensionFromType = file.type.split("/")[1]?.toLowerCase();
-      const extension = extensionFromName || extensionFromType || "jpg";
-      const filename = `${Date.now()}-${randomUUID()}.${extension}`;
-      const filePath = path.join(uploadsDir, filename);
-      const bytes = await file.arrayBuffer();
-      await fs.writeFile(filePath, Buffer.from(bytes));
-      return `/uploads/${filename}`;
-    }
-
-    const houseBeforePhotoUrl = await uploadFile(houseBeforePhoto);
+    const houseBeforePhotoUrl = await uploadPhotoFile(houseBeforePhoto, "reviews");
     const houseAfterPhotoUrl =
       houseAfterPhoto instanceof File && houseAfterPhoto.size > 0
-        ? await uploadFile(houseAfterPhoto)
+        ? await uploadPhotoFile(houseAfterPhoto, "reviews")
         : undefined;
     const customerPhotoUrl =
       customerPhoto instanceof File && customerPhoto.size > 0
-        ? await uploadFile(customerPhoto)
+        ? await uploadPhotoFile(customerPhoto, "reviews")
         : undefined;
 
     const review: Review = {
@@ -79,7 +64,8 @@ export async function POST(request: Request) {
 
     const saved = await addReview(review);
     return NextResponse.json(saved, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Unable to create review." }, { status: 500 });
   }
 }

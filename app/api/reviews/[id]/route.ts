@@ -1,8 +1,7 @@
-import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
-import { deleteReviewById, getReviews, getUploadsDir, saveReviews, Review } from "@/lib/reviews";
+import { deleteStoredObject } from "@/lib/object-storage";
+import { uploadPhotoFile } from "@/lib/job-review";
+import { deleteReviewById, getStoredReviewById, updateReview, type Review } from "@/lib/reviews";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,14 +26,12 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const reviews = await getReviews();
-    const index = reviews.findIndex((review) => review.id === id);
+    const existing = await getStoredReviewById(id);
 
-    if (index === -1) {
+    if (!existing) {
       return NextResponse.json({ error: "Review not found." }, { status: 404 });
     }
 
-    const existing = reviews[index];
     const formData = await request.formData();
     const name = String(formData.get("name") ?? "").trim();
     const rating = Number(formData.get("rating"));
@@ -58,54 +55,27 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid acquisition type." }, { status: 400 });
     }
 
-    async function uploadFile(file: File) {
-      const uploadsDir = getUploadsDir();
-      await fs.mkdir(uploadsDir, { recursive: true });
-
-      const extensionFromName = path.extname(file.name).replace(".", "").toLowerCase();
-      const extensionFromType = file.type.split("/")[1]?.toLowerCase();
-      const extension = extensionFromName || extensionFromType || "jpg";
-      const filename = `${Date.now()}-${randomUUID()}.${extension}`;
-      const filePath = path.join(uploadsDir, filename);
-      const bytes = await file.arrayBuffer();
-      await fs.writeFile(filePath, Buffer.from(bytes));
-      return `/uploads/${filename}`;
-    }
-
-    async function removeUpload(url?: string) {
-      if (!url || !url.startsWith("/uploads/")) {
-        return;
-      }
-      const filename = path.basename(url);
-      const filePath = path.join(getUploadsDir(), filename);
-      try {
-        await fs.unlink(filePath);
-      } catch {
-        // File may be static sample or already removed.
-      }
-    }
-
     let houseBeforePhotoUrl = existing.houseBeforePhotoUrl;
     if (houseBeforePhoto instanceof File && houseBeforePhoto.size > 0) {
-      houseBeforePhotoUrl = await uploadFile(houseBeforePhoto);
+      houseBeforePhotoUrl = await uploadPhotoFile(houseBeforePhoto, "reviews");
       if (houseBeforePhotoUrl !== existing.houseBeforePhotoUrl) {
-        await removeUpload(existing.houseBeforePhotoUrl);
+        await deleteStoredObject(existing.houseBeforePhotoUrl);
       }
     }
 
     let houseAfterPhotoUrl = existing.houseAfterPhotoUrl;
     if (houseAfterPhoto instanceof File && houseAfterPhoto.size > 0) {
-      houseAfterPhotoUrl = await uploadFile(houseAfterPhoto);
+      houseAfterPhotoUrl = await uploadPhotoFile(houseAfterPhoto, "reviews");
       if (houseAfterPhotoUrl !== existing.houseAfterPhotoUrl) {
-        await removeUpload(existing.houseAfterPhotoUrl);
+        await deleteStoredObject(existing.houseAfterPhotoUrl);
       }
     }
 
     let customerPhotoUrl = existing.customerPhotoUrl;
     if (customerPhoto instanceof File && customerPhoto.size > 0) {
-      customerPhotoUrl = await uploadFile(customerPhoto);
+      customerPhotoUrl = await uploadPhotoFile(customerPhoto, "reviews");
       if (customerPhotoUrl !== existing.customerPhotoUrl) {
-        await removeUpload(existing.customerPhotoUrl);
+        await deleteStoredObject(existing.customerPhotoUrl);
       }
     }
 
@@ -121,11 +91,9 @@ export async function PUT(
       customerPhotoUrl,
     };
 
-    reviews[index] = updated;
-    await saveReviews(reviews);
-
-    return NextResponse.json(updated);
-  } catch {
+    return NextResponse.json(await updateReview(updated));
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Unable to update review." }, { status: 500 });
   }
 }

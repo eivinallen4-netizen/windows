@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type BookingRecord = {
   session_id: string;
@@ -16,6 +17,19 @@ export type BookingRecord = {
 const BOOKINGS_PATH = path.join(process.cwd(), "data", "bookings.jsonl");
 
 export async function readBookings(): Promise<BookingRecord[]> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute("SELECT data FROM bookings ORDER BY created_at ASC, session_id ASC");
+    return result.rows
+      .map((row) => {
+        try {
+          return JSON.parse(String(row.data)) as BookingRecord;
+        } catch {
+          return null;
+        }
+      })
+      .filter((entry): entry is BookingRecord => Boolean(entry));
+  }
+
   try {
     const data = await fs.readFile(BOOKINGS_PATH, "utf8");
     return data
@@ -31,11 +45,33 @@ export async function readBookings(): Promise<BookingRecord[]> {
 }
 
 export async function appendBooking(record: BookingRecord) {
+  if (hasTursoConfig()) {
+    await tursoExecute({
+      sql: "INSERT INTO bookings (session_id, created_at, data) VALUES (?, ?, ?)",
+      args: [record.session_id, record.created_at, JSON.stringify(record)],
+    });
+    return;
+  }
+
   await fs.mkdir(path.dirname(BOOKINGS_PATH), { recursive: true });
   await fs.appendFile(BOOKINGS_PATH, `${JSON.stringify(record)}\n`, "utf8");
 }
 
 export async function upsertBooking(record: BookingRecord) {
+  if (hasTursoConfig()) {
+    await tursoExecute({
+      sql: `
+        INSERT INTO bookings (session_id, created_at, data)
+        VALUES (?, ?, ?)
+        ON CONFLICT(session_id) DO UPDATE SET
+          created_at = COALESCE(bookings.created_at, excluded.created_at),
+          data = excluded.data
+      `,
+      args: [record.session_id, record.created_at, JSON.stringify(record)],
+    });
+    return;
+  }
+
   const bookings = await readBookings();
   const index = bookings.findIndex((booking) => booking.session_id === record.session_id);
   if (index === -1) {
@@ -56,6 +92,14 @@ export async function upsertBooking(record: BookingRecord) {
 }
 
 export async function hasBooking(sessionId: string): Promise<boolean> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute({
+      sql: "SELECT 1 AS found FROM bookings WHERE session_id = ? LIMIT 1",
+      args: [sessionId],
+    });
+    return result.rows.length > 0;
+  }
+
   const bookings = await readBookings();
   return bookings.some((booking) => booking.session_id === sessionId);
 }

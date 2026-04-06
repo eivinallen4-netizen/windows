@@ -3,6 +3,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { defaultPricing, type Pricing } from "@/lib/pricing";
+import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type AppPlan = "free" | "pro";
 
@@ -112,10 +113,7 @@ function normalizeAddonsConfig(input?: AddonConfig[]) {
     byId.set(item.id, {
       id: item.id,
       label: item.label || fallback?.label || item.id,
-      description:
-        item.description ||
-        fallback?.description ||
-        "",
+      description: item.description || fallback?.description || "",
       price: isNumber(item.price) ? item.price : fallback?.price ?? 0,
       free: Boolean(item.free),
     });
@@ -134,65 +132,79 @@ async function tryReadLegacyPricing(): Promise<Pricing | null> {
   }
 }
 
+function normalizeConfig(config: AppConfig): AppConfig {
+  const normalizedAddons = normalizeAddonsConfig(config.addonsConfig);
+  return {
+    ...config,
+    repCommissionPercent: isNumber(config.repCommissionPercent)
+      ? config.repCommissionPercent
+      : defaultAppConfig.repCommissionPercent,
+    pricing: {
+      ...config.pricing,
+      addons: normalizedAddons.reduce<Pricing["addons"]>((acc, addon) => {
+        acc[addon.id] = addon.free ? 0 : addon.price;
+        return acc;
+      }, { ...config.pricing.addons }),
+    },
+    addonsConfig: normalizedAddons,
+  };
+}
+
+async function getSeededConfig() {
+  const legacyPricing = await tryReadLegacyPricing();
+  const seeded = {
+    ...defaultAppConfig,
+    pricing: legacyPricing ?? defaultAppConfig.pricing,
+  };
+  return normalizeConfig(seeded);
+}
+
 export async function readAppConfig(): Promise<AppConfig> {
+  if (hasTursoConfig()) {
+    try {
+      const result = await tursoExecute("SELECT data FROM app_config WHERE id = 1");
+      const raw = result.rows[0]?.data;
+      if (raw) {
+        const parsed = JSON.parse(String(raw)) as unknown;
+        if (isAppConfig(parsed)) {
+          return normalizeConfig(parsed);
+        }
+      }
+    } catch {
+      // Fall through to defaults.
+    }
+
+    const seeded = await getSeededConfig();
+    await tursoExecute({
+      sql: "INSERT OR REPLACE INTO app_config (id, data) VALUES (1, ?)",
+      args: [JSON.stringify(seeded)],
+    });
+    return seeded;
+  }
+
   try {
     const data = await fs.readFile(APP_CONFIG_PATH, "utf8");
     const parsed = JSON.parse(data) as unknown;
     if (!isAppConfig(parsed)) {
       throw new Error("Invalid app config.");
     }
-    const normalizedAddons = normalizeAddonsConfig(parsed.addonsConfig);
-    const pricingFromAddons = {
-      ...parsed.pricing,
-      addons: normalizedAddons.reduce<Pricing["addons"]>((acc, addon) => {
-        acc[addon.id] = addon.free ? 0 : addon.price;
-        return acc;
-      }, { ...parsed.pricing.addons }),
-    };
-
-    return {
-      ...parsed,
-      repCommissionPercent: isNumber(parsed.repCommissionPercent)
-        ? parsed.repCommissionPercent
-        : defaultAppConfig.repCommissionPercent,
-      pricing: pricingFromAddons,
-      addonsConfig: normalizedAddons,
-    };
+    return normalizeConfig(parsed);
   } catch {
-    const legacyPricing = await tryReadLegacyPricing();
-    const seeded = {
-      ...defaultAppConfig,
-      pricing: legacyPricing ?? defaultAppConfig.pricing,
-    };
-    seeded.addonsConfig = normalizeAddonsConfig(seeded.addonsConfig);
-    seeded.pricing = {
-      ...seeded.pricing,
-      addons: seeded.addonsConfig.reduce<Pricing["addons"]>((acc, addon) => {
-        acc[addon.id] = addon.free ? 0 : addon.price;
-        return acc;
-      }, { ...seeded.pricing.addons }),
-    };
-    await fs.mkdir(path.dirname(APP_CONFIG_PATH), { recursive: true });
-    await fs.writeFile(APP_CONFIG_PATH, JSON.stringify(seeded, null, 2), "utf8");
-    return seeded;
+    return getSeededConfig();
   }
 }
 
 export async function writeAppConfig(config: AppConfig) {
+  const normalized = normalizeConfig(config);
+
+  if (hasTursoConfig()) {
+    await tursoExecute({
+      sql: "INSERT OR REPLACE INTO app_config (id, data) VALUES (1, ?)",
+      args: [JSON.stringify(normalized)],
+    });
+    return;
+  }
+
   await fs.mkdir(path.dirname(APP_CONFIG_PATH), { recursive: true });
-  const normalized = {
-    ...config,
-    addonsConfig: normalizeAddonsConfig(config.addonsConfig),
-    repCommissionPercent: isNumber(config.repCommissionPercent)
-      ? config.repCommissionPercent
-      : defaultAppConfig.repCommissionPercent,
-  };
-  normalized.pricing = {
-    ...normalized.pricing,
-    addons: normalized.addonsConfig.reduce<Pricing["addons"]>((acc, addon) => {
-      acc[addon.id] = addon.free ? 0 : addon.price;
-      return acc;
-    }, { ...normalized.pricing.addons }),
-  };
   await fs.writeFile(APP_CONFIG_PATH, JSON.stringify(normalized, null, 2), "utf8");
 }

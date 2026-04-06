@@ -1,20 +1,40 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+function getMetadataBase() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000";
+
+  try {
+    return new URL(siteUrl);
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: getMetadataBase(),
   title: {
     default: "PureBin Window Cleaning",
     template: "%s | PureBin Window Cleaning",
   },
   description: "Window cleaning quote calculator, reviews, and field admin tools.",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/logo.png",
   },
   openGraph: {
-    title: "BlueSky Window Cleaning",
+    title: "PureBin Window Cleaning",
+    description: "Window cleaning quote calculator, reviews, and field admin tools.",
+    siteName: "PureBin Window Cleaning",
+    images: ["/logo.png"],
+  },
+  twitter: {
+    card: "summary",
+    title: "PureBin Window Cleaning",
     description: "Window cleaning quote calculator, reviews, and field admin tools.",
     images: ["/logo.png"],
   },
@@ -26,8 +46,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         {children}
       </body>
     </html>

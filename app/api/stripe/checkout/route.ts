@@ -325,71 +325,86 @@ export async function POST(request: Request) {
       },
     });
 
-    const existingJob = await findJobByStripeSessionId(session.id);
-    if (!existingJob) {
-      const job = await addJob({
-        id: `job_${crypto.randomUUID()}`,
-        stripe_session_id: session.id,
-        payment_intent_id: undefined,
-        amount_total: totals.total,
-        currency: "usd",
-        customer: {
-          name: body.user.name,
-          email: body.user.email,
-          address: body.user.address ?? addressLine1,
-        },
-        pane_counts: {
-          standard: Number(paneCounts.standard ?? 0) || undefined,
-          specialty: Number(paneCounts.specialty ?? 0) || undefined,
-          french: Number(paneCounts.french ?? 0) || undefined,
-        },
-        pane_total: totalWindows,
-        service_date: body.serviceDate ?? undefined,
-        service_time: body.serviceTime ?? undefined,
-        rep: {
-          email: authSession.email,
-          name: authSession.name ?? authSession.email,
-        },
-        payment_status: "checkout_pending",
-        created_at: createdAt,
-      });
+    try {
+      const existingJob = await findJobByStripeSessionId(session.id);
+      if (!existingJob) {
+        const job = await addJob({
+          id: `job_${crypto.randomUUID()}`,
+          stripe_session_id: session.id,
+          payment_intent_id: undefined,
+          amount_total: totals.total,
+          currency: "usd",
+          customer: {
+            name: body.user.name,
+            email: body.user.email,
+            address: body.user.address ?? addressLine1,
+          },
+          pane_counts: {
+            standard: Number(paneCounts.standard ?? 0) || undefined,
+            specialty: Number(paneCounts.specialty ?? 0) || undefined,
+            french: Number(paneCounts.french ?? 0) || undefined,
+          },
+          pane_total: totalWindows,
+          service_date: body.serviceDate ?? undefined,
+          service_time: body.serviceTime ?? undefined,
+          rep: {
+            email: authSession.email,
+            name: authSession.name ?? authSession.email,
+          },
+          payment_status: "checkout_pending",
+          created_at: createdAt,
+        });
 
-      await upsertTransaction({
-        job_id: job.id,
-        stripe_session_id: session.id,
-        amount_total: totals.total,
-        currency: "usd",
-        customer: job.customer,
-        rep: job.rep,
-        pane_counts: job.pane_counts,
-        pane_total: job.pane_total,
-        service_date: job.service_date,
-        service_time: job.service_time,
-        line_items: transactionLineItems,
-        payment_status: "checkout_pending",
-        created_at: createdAt,
-      });
-    } else {
-      await upsertTransaction({
-        job_id: existingJob.id,
-        stripe_session_id: session.id,
-        amount_total: totals.total,
-        currency: "usd",
-        customer: existingJob.customer,
-        rep: existingJob.rep,
-        pane_counts: existingJob.pane_counts,
-        pane_total: existingJob.pane_total,
-        service_date: existingJob.service_date,
-        service_time: existingJob.service_time,
-        line_items: transactionLineItems,
-        payment_status: existingJob.payment_status,
-        created_at: existingJob.created_at ?? createdAt,
+        await upsertTransaction({
+          job_id: job.id,
+          stripe_session_id: session.id,
+          amount_total: totals.total,
+          currency: "usd",
+          customer: job.customer,
+          rep: job.rep,
+          pane_counts: job.pane_counts,
+          pane_total: job.pane_total,
+          service_date: job.service_date,
+          service_time: job.service_time,
+          line_items: transactionLineItems,
+          payment_status: "checkout_pending",
+          created_at: createdAt,
+        });
+      } else {
+        await upsertTransaction({
+          job_id: existingJob.id,
+          stripe_session_id: session.id,
+          amount_total: totals.total,
+          currency: "usd",
+          customer: existingJob.customer,
+          rep: existingJob.rep,
+          pane_counts: existingJob.pane_counts,
+          pane_total: existingJob.pane_total,
+          service_date: existingJob.service_date,
+          service_time: existingJob.service_time,
+          line_items: transactionLineItems,
+          payment_status: existingJob.payment_status,
+          created_at: existingJob.created_at ?? createdAt,
+        });
+      }
+    } catch (storageError) {
+      console.error("Checkout session created, but local persistence failed.", {
+        sessionId: session.id,
+        error: storageError,
       });
     }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to create Stripe checkout session." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to create Stripe checkout session.",
+      },
+      { status: 500 }
+    );
   }
 }

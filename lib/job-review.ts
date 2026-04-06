@@ -1,8 +1,7 @@
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
-import { addReview, getUploadsDir, type Review } from "@/lib/reviews";
+import { addReview, type Review } from "@/lib/reviews";
 import type { JobRecord } from "@/lib/jobs";
+import { uploadPhotoFileToStorage } from "@/lib/object-storage";
 
 export type ReviewFormValues = {
   name: string;
@@ -71,18 +70,8 @@ export function validateReviewFormValues(
   return null;
 }
 
-export async function uploadPhotoFile(file: File) {
-  const uploadsDir = getUploadsDir();
-  await fs.mkdir(uploadsDir, { recursive: true });
-
-  const extensionFromName = path.extname(file.name).replace(".", "").toLowerCase();
-  const extensionFromType = file.type.split("/")[1]?.toLowerCase();
-  const extension = extensionFromName || extensionFromType || "jpg";
-  const filename = `${Date.now()}-${randomUUID()}.${extension}`;
-  const filePath = path.join(uploadsDir, filename);
-  const bytes = await file.arrayBuffer();
-  await fs.writeFile(filePath, Buffer.from(bytes));
-  return `/uploads/${filename}`;
+export async function uploadPhotoFile(file: File, prefix = "uploads") {
+  return uploadPhotoFileToStorage(file, prefix);
 }
 
 export async function createReviewForJob(
@@ -94,7 +83,7 @@ export async function createReviewForJob(
   const houseBeforePhotoUrl =
     options.beforePhotoUrl ||
     (values.houseBeforePhoto instanceof File && values.houseBeforePhoto.size > 0
-      ? await uploadPhotoFile(values.houseBeforePhoto)
+      ? await uploadPhotoFile(values.houseBeforePhoto, "reviews")
       : undefined);
 
   if (!houseBeforePhotoUrl) {
@@ -103,11 +92,11 @@ export async function createReviewForJob(
 
   const houseAfterPhotoUrl =
     values.houseAfterPhoto instanceof File && values.houseAfterPhoto.size > 0
-      ? await uploadPhotoFile(values.houseAfterPhoto)
+      ? await uploadPhotoFile(values.houseAfterPhoto, "reviews")
       : undefined;
   const customerPhotoUrl =
     values.customerPhoto instanceof File && values.customerPhoto.size > 0
-      ? await uploadPhotoFile(values.customerPhoto)
+      ? await uploadPhotoFile(values.customerPhoto, "reviews")
       : undefined;
 
   const review: Review = {

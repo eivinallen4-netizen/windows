@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { readAppConfig } from "@/lib/app-config";
 import { getJobs, type JobRecord, type PaneCounts } from "@/lib/jobs";
+import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type TransactionLineItem = {
   name: string;
@@ -64,23 +65,82 @@ function getTransactionKey(record: TransactionSeed | TransactionRecord) {
   return record.payment_intent_id || record.stripe_session_id || record.job_id || "";
 }
 
+function getTransactionSortValue(record: TransactionRecord) {
+  return new Date(record.updated_at || record.created_at || 0).getTime() || 0;
+}
+
+function dedupeTransactions(records: TransactionRecord[]) {
+  const byKey = new Map<string, TransactionRecord>();
+
+  for (const record of records) {
+    const key = getTransactionKey(record);
+    if (!key) {
+      continue;
+    }
+
+    const existing = byKey.get(key);
+    if (!existing || getTransactionSortValue(record) >= getTransactionSortValue(existing)) {
+      byKey.set(key, record);
+    }
+  }
+
+  return Array.from(byKey.values()).sort((a, b) => {
+    const createdDelta = getTransactionSortValue(a) - getTransactionSortValue(b);
+    if (createdDelta !== 0) {
+      return createdDelta;
+    }
+    return a.id.localeCompare(b.id);
+  });
+}
+
+async function readTransactionByKey(key: string): Promise<TransactionRecord | null> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute({
+      sql: "SELECT data FROM transactions WHERE transaction_key = ? LIMIT 1",
+      args: [key],
+    });
+    const raw = result.rows[0]?.data;
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(String(raw)) as TransactionRecord;
+    } catch {
+      return null;
+    }
+  }
+
+  const records = await readTransactions();
+  return records.find((record) => getTransactionKey(record) === key) ?? null;
+}
+
 export async function readTransactions(): Promise<TransactionRecord[]> {
+  if (hasTursoConfig()) {
+    const result = await tursoExecute("SELECT data FROM transactions ORDER BY created_at ASC, id ASC");
+    const records = result.rows
+      .map((row) => {
+        try {
+          return JSON.parse(String(row.data)) as TransactionRecord;
+        } catch {
+          return null;
+        }
+      })
+      .filter((entry): entry is TransactionRecord => Boolean(entry));
+    return dedupeTransactions(records);
+  }
+
   try {
     const raw = await fs.readFile(TRANSACTIONS_PATH, "utf8");
     if (!raw.trim()) {
-      await fs.mkdir(path.dirname(TRANSACTIONS_PATH), { recursive: true });
-      await fs.writeFile(TRANSACTIONS_PATH, "[]", "utf8");
       return [];
     }
     const parsed = JSON.parse(raw) as TransactionRecord[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? dedupeTransactions(parsed) : [];
   } catch (error) {
     if (
       (error as NodeJS.ErrnoException).code === "ENOENT" ||
       error instanceof SyntaxError
     ) {
-      await fs.mkdir(path.dirname(TRANSACTIONS_PATH), { recursive: true });
-      await fs.writeFile(TRANSACTIONS_PATH, "[]", "utf8");
       return [];
     }
     throw error;
@@ -88,8 +148,41 @@ export async function readTransactions(): Promise<TransactionRecord[]> {
 }
 
 async function writeTransactions(records: TransactionRecord[]) {
+  const dedupedRecords = dedupeTransactions(records);
+
+  if (hasTursoConfig()) {
+    for (const record of dedupedRecords) {
+      await tursoExecute({
+        sql: `
+          INSERT INTO transactions
+            (id, transaction_key, payment_intent_id, stripe_session_id, job_id, created_at, updated_at, data)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(transaction_key) DO UPDATE SET
+            id = excluded.id,
+            payment_intent_id = excluded.payment_intent_id,
+            stripe_session_id = excluded.stripe_session_id,
+            job_id = excluded.job_id,
+            created_at = excluded.created_at,
+            updated_at = excluded.updated_at,
+            data = excluded.data
+        `,
+        args: [
+          record.id,
+          getTransactionKey(record),
+          record.payment_intent_id ?? null,
+          record.stripe_session_id ?? null,
+          record.job_id ?? null,
+          record.created_at,
+          record.updated_at,
+          JSON.stringify(record),
+        ],
+      });
+    }
+    return;
+  }
+
   await fs.mkdir(path.dirname(TRANSACTIONS_PATH), { recursive: true });
-  await fs.writeFile(TRANSACTIONS_PATH, JSON.stringify(records, null, 2), "utf8");
+  await fs.writeFile(TRANSACTIONS_PATH, JSON.stringify(dedupedRecords, null, 2), "utf8");
 }
 
 export async function upsertTransaction(seed: TransactionSeed): Promise<TransactionRecord | null> {
@@ -98,9 +191,7 @@ export async function upsertTransaction(seed: TransactionSeed): Promise<Transact
     return null;
   }
 
-  const [records, appConfig] = await Promise.all([readTransactions(), readAppConfig()]);
-  const index = records.findIndex((record) => getTransactionKey(record) === key);
-  const previous = index >= 0 ? records[index] : undefined;
+  const [previous, appConfig] = await Promise.all([readTransactionByKey(key), readAppConfig()]);
   const now = new Date().toISOString();
   const paymentStatus = seed.payment_status ?? previous?.payment_status;
   const amountTotal = Number(seed.amount_total ?? previous?.amount_total ?? 0);
@@ -143,12 +234,42 @@ export async function upsertTransaction(seed: TransactionSeed): Promise<Transact
       (paymentComplete ? now : undefined),
   };
 
+  if (hasTursoConfig()) {
+    await tursoExecute({
+      sql: `
+        INSERT INTO transactions
+          (id, transaction_key, payment_intent_id, stripe_session_id, job_id, created_at, updated_at, data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(transaction_key) DO UPDATE SET
+          id = excluded.id,
+          payment_intent_id = excluded.payment_intent_id,
+          stripe_session_id = excluded.stripe_session_id,
+          job_id = excluded.job_id,
+          created_at = excluded.created_at,
+          updated_at = excluded.updated_at,
+          data = excluded.data
+      `,
+      args: [
+        next.id,
+        key,
+        next.payment_intent_id ?? null,
+        next.stripe_session_id ?? null,
+        next.job_id ?? null,
+        next.created_at,
+        next.updated_at,
+        JSON.stringify(next),
+      ],
+    });
+    return next;
+  }
+
+  const records = await readTransactions();
+  const index = records.findIndex((record) => getTransactionKey(record) === key);
   if (index >= 0) {
     records[index] = next;
   } else {
     records.push(next);
   }
-
   await writeTransactions(records);
   return next;
 }

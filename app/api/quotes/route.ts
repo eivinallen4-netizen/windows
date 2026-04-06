@@ -1,17 +1,27 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { computeQuote, type QuoteSelections } from "@/lib/quote";
 import { readPricing } from "@/lib/pricing-store";
 import { getSessionFromRequest } from "@/lib/auth";
-
-const QUOTES_PATH = path.join(process.cwd(), "data", "quotes.jsonl");
+import { createQuote, readQuotes, writeQuotes, type QuoteRecord } from "@/lib/quotes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type QuotePostBody = {
+  user?: { name?: string; email?: string; address?: string };
+  selections?: QuoteSelections;
+  totals?: { total?: number };
+  created_at?: string;
+};
+
 function isValidEmail(value: string) {
   return /.+@.+\..+/.test(value);
+}
+
+function hasValidUser(
+  user: QuotePostBody["user"]
+): user is { name: string; email: string; address: string } {
+  return Boolean(user?.name && user.email && user.address && isValidEmail(user.email));
 }
 
 export async function POST(request: Request) {
@@ -21,19 +31,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    const body = (await request.json()) as {
-      user?: { name?: string; email?: string; address?: string };
-      selections?: QuoteSelections;
-      totals?: { total?: number };
-      created_at?: string;
-    };
+    const body = (await request.json()) as QuotePostBody;
 
-    if (!body.user?.email || !isValidEmail(body.user.email)) {
-      return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
-    }
-
-    if (!body.user.name || !body.user.address) {
-      return NextResponse.json({ error: "Name and address are required." }, { status: 400 });
+    if (!hasValidUser(body.user)) {
+      return NextResponse.json(
+        { error: "Name, address, and a valid email are required." },
+        { status: 400 }
+      );
     }
 
     if (!body.selections) {
@@ -49,46 +53,19 @@ export async function POST(request: Request) {
     const pricing = await readPricing();
     const totals = computeQuote(pricing, body.selections);
 
-    const record = {
+    await createQuote({
       id: globalThis.crypto?.randomUUID?.() ?? `quote_${Date.now()}`,
       user: body.user,
       rep: { name: session.name ?? session.email, email: session.email },
       selections: body.selections,
       totals,
       created_at: body.created_at || new Date().toISOString(),
-    };
-
-    await fs.mkdir(path.dirname(QUOTES_PATH), { recursive: true });
-    await fs.appendFile(QUOTES_PATH, `${JSON.stringify(record)}\n`, "utf8");
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Unable to save quote." }, { status: 500 });
-  }
-}
-
-type QuoteRecord = {
-  id?: string;
-  user: { name: string; email: string; address: string };
-  rep?: { name: string; email: string };
-  selections: QuoteSelections;
-  totals: ReturnType<typeof computeQuote>;
-  created_at: string;
-};
-
-async function readQuotes(): Promise<QuoteRecord[]> {
-  try {
-    const data = await fs.readFile(QUOTES_PATH, "utf8");
-    return data
-      .split("\n")
-      .filter((line) => line.trim().length)
-      .map((line) => JSON.parse(line) as QuoteRecord);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return [];
-    }
-    throw error;
   }
 }
 
@@ -129,9 +106,7 @@ export async function PATCH(request: Request) {
     }
 
     quotes[body.index] = body.record;
-    await fs.mkdir(path.dirname(QUOTES_PATH), { recursive: true });
-    const serialized = quotes.map((quote) => JSON.stringify(quote)).join("\n");
-    await fs.writeFile(QUOTES_PATH, serialized + "\n", "utf8");
+    await writeQuotes(quotes);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

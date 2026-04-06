@@ -101,7 +101,7 @@ export function ReviewShowcaseCard({ review }: ReviewShowcaseCardProps) {
             <Avatar className="size-10 border border-white/40 sm:size-12">
               <AvatarImage src={review.customerPhotoUrl} alt={review.name} />
               <AvatarFallback className="bg-white/90">
-                <Image src="/logo.png" alt="BlueSky logo" width={24} height={24} className="size-6 object-contain" />
+                <Image src="/logo.png" alt="PureBin logo" width={24} height={24} className="size-6 object-contain" />
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
