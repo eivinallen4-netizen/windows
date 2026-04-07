@@ -8,7 +8,7 @@ import {
 } from "@/lib/portal-routes";
 
 const PUBLIC_PATHS = ["/signin"];
-const PUBLIC_PREFIXES = ["/_next", "/api/auth"];
+const PUBLIC_PREFIXES = ["/_next", "/api/auth", "/setup", "/api/users/onboard"];
 const PUBLIC_FILES = ["/favicon.ico", "/logo.png", "/robots.txt", "/sitemap.xml"];
 
 function isPublicPath(pathname: string) {
