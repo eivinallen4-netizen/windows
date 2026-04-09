@@ -150,13 +150,13 @@ export default function TechPage() {
   }, [completedJobs]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(11,111,178,0.14),_transparent_34%),linear-gradient(180deg,_#f7fbff_0%,_#eef5fa_100%)]">
+    <div className="app-page-shell-soft">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
         <section className="mb-6 overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(11,111,178,0.12),rgba(255,255,255,0.94)_38%,rgba(11,111,178,0.08))] shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)]">
           <div className="grid gap-6 px-6 py-8 sm:px-8 lg:grid-cols-[1.15fr,0.85fr] lg:items-end">
             <div className="space-y-4">
-              <span className="inline-flex rounded-full border border-[#0b6fb2]/20 bg-[#0b6fb2]/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#0b6fb2]">
+              <span className="app-kicker">
                 Tech Portal
               </span>
               <div className="space-y-2">
@@ -188,7 +188,7 @@ export default function TechPage() {
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
             <CardContent className="px-5 py-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Panes</p>
-              <p className="mt-3 text-4xl font-black tracking-tight text-[#0b6fb2]">{score.totalPanes}</p>
+              <p className="mt-3 text-4xl font-black tracking-tight text-primary">{score.totalPanes}</p>
             </CardContent>
           </Card>
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
@@ -229,7 +229,7 @@ export default function TechPage() {
 
             {activeJobs.length === 0 && !loading ? (
               <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 px-6 py-8 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0b6fb2]">All Clear</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">All Clear</p>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">No active jobs left.</h2>
                 <p className="mt-3 text-sm text-slate-600">
                   You finished the queue. Pane score, houses done, and pace are still tracked above.
@@ -261,7 +261,7 @@ export default function TechPage() {
                             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
                               {jobStatus}
                             </span>
-                            <span className="rounded-full border border-[#0b6fb2]/20 bg-[#0b6fb2]/8 px-3 py-1 text-xs font-semibold text-[#0b6fb2]">
+                            <span className="rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
                               Payment: {job.payment_status || "pending"}
                             </span>
                           </div>
@@ -275,11 +275,11 @@ export default function TechPage() {
                             </Link>
                           </Button>
                           {finishDisabled ? (
-                            <Button type="button" className="rounded-full bg-[#0b6fb2] hover:bg-[#0a63a1]" disabled>
+                            <Button type="button" className="rounded-full bg-primary hover:bg-primary/90" disabled>
                               Finish Job
                             </Button>
                           ) : (
-                            <Button asChild className="rounded-full bg-[#0b6fb2] hover:bg-[#0a63a1]">
+                            <Button asChild className="rounded-full bg-primary hover:bg-primary/90">
                               <Link href={`/tech/jobs/${job.id}/finish`}>Finish Job</Link>
                             </Button>
                           )}

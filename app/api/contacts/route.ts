@@ -8,6 +8,10 @@ type ContactPayload = {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  address?: string;
+  paneCount?: number;
+  notes?: string;
+  source?: string;
 };
 
 function isValidEmail(value: string) {
@@ -58,17 +62,28 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ContactPayload;
-    if (!body.email || !isValidEmail(body.email)) {
-      return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
+    if (!body.email && !body.phone?.trim()) {
+      return NextResponse.json({ error: "A phone number or email is required." }, { status: 400 });
     }
 
-    const brevo = await createBrevoContact(body);
+    if (body.email && !isValidEmail(body.email)) {
+      return NextResponse.json({ error: "Email must be valid." }, { status: 400 });
+    }
+
+    const brevo = body.email ? await createBrevoContact(body) : undefined;
     const record: ContactRecord = {
       id: globalThis.crypto?.randomUUID?.() ?? `contact_${Date.now()}`,
-      email: body.email.trim().toLowerCase(),
+      email: body.email?.trim().toLowerCase() || undefined,
       firstName: body.firstName?.trim() || undefined,
       lastName: body.lastName?.trim() || undefined,
       phone: body.phone?.trim() || undefined,
+      address: body.address?.trim() || undefined,
+      paneCount:
+        typeof body.paneCount === "number" && Number.isFinite(body.paneCount) && body.paneCount > 0
+          ? Math.round(body.paneCount)
+          : undefined,
+      notes: body.notes?.trim() || undefined,
+      source: body.source?.trim() || undefined,
       created_at: new Date().toISOString(),
       brevo: { id: brevo?.id },
     };

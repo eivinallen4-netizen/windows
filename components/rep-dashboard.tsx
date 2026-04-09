@@ -153,11 +153,12 @@ export function RepDashboard() {
     );
   }
 
-  if (!stats?.myStats) {
+  if (!stats) {
     return null;
   }
 
   const myStats = stats.myStats;
+  const isAdminViewer = !myStats;
   const teammates = stats.leaderboard.filter((entry) => entry.email !== stats.viewerEmail).slice(0, 5);
 
   return (
@@ -166,24 +167,32 @@ export function RepDashboard() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3">
             <Badge className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white">
-              Rep Cut Board
+              {isAdminViewer ? "Rep Team Board" : "Rep Cut Board"}
             </Badge>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/60">
-                {myStats.tier}
+                {isAdminViewer ? "Admin View" : myStats.tier}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">
-                ${formatCurrency(myStats.repCut).replace("$", "")} earned
+                {isAdminViewer
+                  ? `${formatCurrency(stats.teamSummary.totalPaidRevenue)} closed`
+                  : `${formatCurrency(myStats.repCut).replace("$", "")} earned`}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/74 sm:text-base">
-                {myStats.name}, this page is locked to your paid cut, panes sold, pending authorized money, and where you sit on the team board.
+                {isAdminViewer
+                  ? "Admin can now open rep stats to see the live team leaderboard, paid revenue, pending revenue, and stripe-linked rep jobs."
+                  : `${myStats.name}, this page is locked to your paid cut, panes sold, pending authorized money, and where you sit on the team board.`}
               </p>
             </div>
           </div>
           <div className="rounded-[1.6rem] border border-white/12 bg-white/8 px-5 py-4 text-right backdrop-blur">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">Leaderboard Rank</p>
-            <p className="mt-2 text-4xl font-black">#{myStats.rank}</p>
-            <p className="mt-1 text-sm text-emerald-300">{myStats.paidJobCount} paid jobs closed</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
+              {isAdminViewer ? "Top Closer" : "Leaderboard Rank"}
+            </p>
+            <p className="mt-2 text-4xl font-black">{isAdminViewer ? stats.teamSummary.topCloserName ?? "None" : `#${myStats.rank}`}</p>
+            <p className="mt-1 text-sm text-emerald-300">
+              {isAdminViewer ? `${stats.teamSummary.totalPaidBookings} paid jobs closed` : `${myStats.paidJobCount} paid jobs closed`}
+            </p>
           </div>
         </div>
 
@@ -192,11 +201,15 @@ export function RepDashboard() {
             <CardContent className="p-5">
               <div className="flex items-center gap-3 text-white/72">
                 <BadgeDollarSign className="size-4" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Your Cut</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">{isAdminViewer ? "Paid Revenue" : "Your Cut"}</span>
               </div>
-              <p className="mt-4 text-3xl font-black">{formatCurrency(myStats.repCut)}</p>
+              <p className="mt-4 text-3xl font-black">
+                {isAdminViewer ? formatCurrency(stats.teamSummary.totalPaidRevenue) : formatCurrency(myStats.repCut)}
+              </p>
               <p className="mt-2 text-sm text-white/62">
-                {stats.repCommissionPercent}% of {formatCurrency(myStats.paidRevenue)} paid revenue
+                {isAdminViewer
+                  ? `${stats.teamSummary.totalPaidBookings} paid bookings across the team`
+                  : `${stats.repCommissionPercent}% of ${formatCurrency(myStats.paidRevenue)} paid revenue`}
               </p>
             </CardContent>
           </Card>
@@ -204,21 +217,29 @@ export function RepDashboard() {
             <CardContent className="p-5">
               <div className="flex items-center gap-3 text-white/72">
                 <Trophy className="size-4" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Panels Sold</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">{isAdminViewer ? "Paid Panes" : "Panels Sold"}</span>
               </div>
-              <p className="mt-4 text-3xl font-black">{myStats.paidPanes}</p>
-              <p className="mt-2 text-sm text-white/62">paid panes across {myStats.paidJobCount} booked jobs</p>
+              <p className="mt-4 text-3xl font-black">{isAdminViewer ? stats.teamSummary.totalPaidPanes : myStats.paidPanes}</p>
+              <p className="mt-2 text-sm text-white/62">
+                {isAdminViewer
+                  ? "paid panes across the team"
+                  : `paid panes across ${myStats.paidJobCount} booked jobs`}
+              </p>
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-white/8 py-0 text-white shadow-none">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 text-white/72">
                 <Clock3 className="size-4" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Pending Cut</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">{isAdminViewer ? "Pending Revenue" : "Pending Cut"}</span>
               </div>
-              <p className="mt-4 text-3xl font-black">{formatCurrency(myStats.pendingCut)}</p>
+              <p className="mt-4 text-3xl font-black">
+                {isAdminViewer ? formatCurrency(stats.teamSummary.totalPendingRevenue) : formatCurrency(myStats.pendingCut)}
+              </p>
               <p className="mt-2 text-sm text-white/62">
-                {myStats.pendingJobCount} authorized jobs worth {formatCurrency(myStats.pendingRevenue)}
+                {isAdminViewer
+                  ? `${stats.teamSummary.totalPendingBookings} authorized jobs waiting on capture`
+                  : `${myStats.pendingJobCount} authorized jobs worth ${formatCurrency(myStats.pendingRevenue)}`}
               </p>
             </CardContent>
           </Card>
@@ -226,10 +247,12 @@ export function RepDashboard() {
             <CardContent className="p-5">
               <div className="flex items-center gap-3 text-white/72">
                 <Wallet className="size-4" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Pending Panels</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">{isAdminViewer ? "Active Reps" : "Pending Panels"}</span>
               </div>
-              <p className="mt-4 text-3xl font-black">{myStats.pendingPanes}</p>
-              <p className="mt-2 text-sm text-white/62">authorized but not captured yet</p>
+              <p className="mt-4 text-3xl font-black">{isAdminViewer ? stats.teamSummary.totalReps : myStats.pendingPanes}</p>
+              <p className="mt-2 text-sm text-white/62">
+                {isAdminViewer ? "reps currently on the board" : "authorized but not captured yet"}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -248,13 +271,25 @@ export function RepDashboard() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-3xl border border-emerald-400/20 bg-emerald-500/10 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Paid</p>
-              <p className="mt-2 text-2xl font-black text-white">{formatCurrency(myStats.paidRevenue)}</p>
-              <p className="mt-1 text-sm text-white/68">{myStats.paidPanes} panes sold and fully paid</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {formatCurrency(isAdminViewer ? stats.teamSummary.totalPaidRevenue : myStats.paidRevenue)}
+              </p>
+              <p className="mt-1 text-sm text-white/68">
+                {isAdminViewer
+                  ? `${stats.teamSummary.totalPaidPanes} panes sold and fully paid`
+                  : `${myStats.paidPanes} panes sold and fully paid`}
+              </p>
             </div>
             <div className="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Authorized</p>
-              <p className="mt-2 text-2xl font-black text-white">{formatCurrency(myStats.pendingRevenue)}</p>
-              <p className="mt-1 text-sm text-white/68">{myStats.pendingPanes} panes waiting on capture</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {formatCurrency(isAdminViewer ? stats.teamSummary.totalPendingRevenue : myStats.pendingRevenue)}
+              </p>
+              <p className="mt-1 text-sm text-white/68">
+                {isAdminViewer
+                  ? `${stats.teamSummary.totalPendingPanes} panes waiting on capture`
+                  : `${myStats.pendingPanes} panes waiting on capture`}
+              </p>
             </div>
           </div>
         </div>
@@ -358,7 +393,7 @@ export function RepDashboard() {
           <div className="mt-5 space-y-3">
             {stats.myJobs.length === 0 ? (
               <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                No Stripe-linked jobs yet.
+                {isAdminViewer ? "No rep-linked jobs for this admin account." : "No Stripe-linked jobs yet."}
               </div>
             ) : (
               stats.myJobs.map((job) => (

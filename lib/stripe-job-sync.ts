@@ -75,6 +75,7 @@ export async function syncJobFromCheckoutSession(
   const createdAt = new Date().toISOString();
 
   const existingJob =
+    (session.metadata?.job_id ? await findJobById(session.metadata.job_id) : null) ||
     (await findJobByPaymentIntentId(paymentIntentId)) ||
     (session.id ? await findJobByStripeSessionId(session.id) : null) ||
     (session.id ? await findJobById(session.id) : null);

@@ -187,7 +187,7 @@ export default function StartJobClient({ jobId }: { jobId: string }) {
   }, [beforePhotoPreviewUrl]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(11,111,178,0.14),_transparent_34%),linear-gradient(180deg,_#f7fbff_0%,_#eef5fa_100%)]">
+    <div className="app-page-shell-soft">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
         {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
@@ -198,13 +198,13 @@ export default function StartJobClient({ jobId }: { jobId: string }) {
             <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(11,111,178,0.12),rgba(255,255,255,0.92)_45%,rgba(11,111,178,0.08))] shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)]">
               <div className="grid gap-6 px-6 py-8 sm:px-8 lg:grid-cols-[1.15fr,0.85fr] lg:items-end">
                 <div className="space-y-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0b6fb2]">Active Job</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Active Job</p>
                   <div className="space-y-3">
                     <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
                       {job.customer?.address || "Address not set"}
                     </h1>
                     <p className="max-w-2xl text-base font-medium text-slate-600 sm:text-lg">
-                      {job.customer?.name || "Customer"} {job.customer?.email ? `• ${job.customer.email}` : ""}
+                      {job.customer?.name || "Customer"} {job.customer?.email ? `- ${job.customer.email}` : ""}
                     </p>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function StartJobClient({ jobId }: { jobId: string }) {
 
                     <div className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pane Count</p>
-                      <p className="text-3xl font-black tracking-tight text-[#0b6fb2] sm:text-4xl">
+                      <p className="text-3xl font-black tracking-tight text-primary sm:text-4xl">
                         {job.pane_total ? `${job.pane_total} panes` : "Pane count not recorded"}
                       </p>
                       {paneBreakdown ? (
@@ -347,7 +347,7 @@ export default function StartJobClient({ jobId }: { jobId: string }) {
                     <div className="flex flex-col gap-3 pt-2">
                       <Button
                         type="button"
-                        className="h-12 bg-[#0b6fb2] text-white hover:bg-[#0a63a1]"
+                        className="h-12 bg-primary text-primary-foreground hover:bg-primary/90"
                         onClick={handleStartJob}
                         disabled={starting || uploadingBeforePhoto || !job.start_photo_url}
                       >

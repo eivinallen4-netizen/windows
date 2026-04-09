@@ -3,6 +3,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { defaultPricing, type Pricing } from "@/lib/pricing";
+import { defaultScheduleWindows, normalizeScheduleWindowsConfig, type ScheduleWindowsConfig } from "@/lib/schedule-types";
 import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type AppPlan = "free" | "pro";
@@ -11,6 +12,7 @@ export type AppConfig = {
   pricing: Pricing;
   addonsConfig: AddonConfig[];
   repCommissionPercent: number;
+  scheduleWindows: ScheduleWindowsConfig;
   plans: {
     activePlan: AppPlan;
     free: {
@@ -61,10 +63,11 @@ const defaultAddonsConfig: AddonConfig[] = [
   },
 ];
 
-const defaultAppConfig: AppConfig = {
+export const defaultAppConfig: AppConfig = {
   pricing: defaultPricing,
   addonsConfig: defaultAddonsConfig,
   repCommissionPercent: 25,
+  scheduleWindows: defaultScheduleWindows,
   plans: {
     activePlan: "pro",
     free: {
@@ -99,6 +102,7 @@ function isAppConfig(value: unknown): value is AppConfig {
   return (
     isPricing(config.pricing) &&
     (config.repCommissionPercent === undefined || isNumber(config.repCommissionPercent)) &&
+    (config.scheduleWindows === undefined || typeof config.scheduleWindows === "object") &&
     (config.plans?.activePlan === "free" || config.plans?.activePlan === "pro") &&
     typeof config.plans?.free?.addonsFree === "boolean"
   );
@@ -139,6 +143,7 @@ function normalizeConfig(config: AppConfig): AppConfig {
     repCommissionPercent: isNumber(config.repCommissionPercent)
       ? config.repCommissionPercent
       : defaultAppConfig.repCommissionPercent,
+    scheduleWindows: normalizeScheduleWindowsConfig(config.scheduleWindows),
     pricing: {
       ...config.pricing,
       addons: normalizedAddons.reduce<Pricing["addons"]>((acc, addon) => {

@@ -70,6 +70,56 @@ type QuoteDraft = {
   serviceTime?: string;
 };
 
+type MapboxContextItem = {
+  id: string;
+  text?: string;
+  short_code?: string;
+};
+
+type MapboxFeature = {
+  id?: string;
+  place_name: string;
+  address?: string;
+  text?: string;
+  context?: MapboxContextItem[];
+};
+
+function getMapboxContextValue(
+  context: MapboxContextItem[],
+  prefix: string,
+  kind: "text" | "short_code" = "text"
+) {
+  const item = context.find((entry) => entry.id.startsWith(prefix));
+  return kind === "short_code" ? item?.short_code : item?.text;
+}
+
+function normalizeCode(value?: string) {
+  if (!value) return undefined;
+  const parts = value.split("-");
+  return parts[parts.length - 1]?.toUpperCase() || undefined;
+}
+
+function parseMapboxFeature(feature: MapboxFeature) {
+  const context = feature.context ?? [];
+  const line1 = feature.address && feature.text ? `${feature.address} ${feature.text}` : feature.text ?? feature.place_name;
+  const city = getMapboxContextValue(context, "place.");
+  const state = normalizeCode(getMapboxContextValue(context, "region.", "short_code"));
+  const postalCode = getMapboxContextValue(context, "postcode.");
+  const country = normalizeCode(getMapboxContextValue(context, "country.", "short_code")) ?? "US";
+  const label = [line1, city, state, postalCode].filter(Boolean).join(", ") || feature.place_name;
+
+  return {
+    label,
+    details: {
+      line1,
+      city,
+      state,
+      postalCode,
+      country,
+    },
+  };
+}
+
 export default function CloseDealClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -184,39 +234,20 @@ export default function CloseDealClient() {
         if (!token) return;
         const encoded = encodeURIComponent(addressQuery.trim());
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&autocomplete=true&types=address&limit=5&country=US`,
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&autocomplete=true&types=address&limit=5&country=US&proximity=ip`,
           { signal: controller.signal }
         );
         if (!response.ok) return;
-        const data = (await response.json()) as {
-          features?: Array<{
-            id: string;
-            place_name: string;
-            address?: string;
-            text?: string;
-            context?: Array<{ id: string; text: string }>;
-          }>;
-        };
+        const data = (await response.json()) as { features?: MapboxFeature[] };
 
         const suggestions =
           data.features?.map((feature) => {
-            const context = feature.context ?? [];
-            const city = context.find((item) => item.id.startsWith("place."))?.text;
-            const state = context.find((item) => item.id.startsWith("region."))?.text;
-            const postal = context.find((item) => item.id.startsWith("postcode."))?.text;
-            const country = context.find((item) => item.id.startsWith("country."))?.text;
-            const line1 = feature.address && feature.text ? `${feature.address} ${feature.text}` : undefined;
+            const parsed = parseMapboxFeature(feature);
 
             return {
-              id: feature.id,
-              label: feature.place_name,
-              details: {
-                line1,
-                city,
-                state,
-                postalCode: postal,
-                country,
-              },
+              id: feature.id ?? feature.place_name,
+              label: parsed.label,
+              details: parsed.details,
             };
           }) ?? [];
 
@@ -259,38 +290,19 @@ export default function CloseDealClient() {
           if (!response.ok) {
             throw new Error("Unable to lookup address.");
           }
-          const data = (await response.json()) as {
-            features?: Array<{
-              place_name: string;
-              address?: string;
-              text?: string;
-              context?: Array<{ id: string; text: string }>;
-            }>;
-          };
+          const data = (await response.json()) as { features?: MapboxFeature[] };
           const feature = data.features?.[0];
           if (!feature) {
             throw new Error("No address found for current location.");
           }
-          const context = feature.context ?? [];
-          const city = context.find((item) => item.id.startsWith("place."))?.text;
-          const state = context.find((item) => item.id.startsWith("region."))?.text;
-          const postal = context.find((item) => item.id.startsWith("postcode."))?.text;
-          const country = context.find((item) => item.id.startsWith("country."))?.text;
-          const line1 =
-            feature.address && feature.text ? `${feature.address} ${feature.text}` : feature.place_name;
+          const parsed = parseMapboxFeature(feature);
 
           setUser((prev) => ({
             ...(prev ?? { name: "", email: "", address: "" }),
-            address: feature.place_name,
-            addressDetails: {
-              line1,
-              city,
-              state,
-              postalCode: postal,
-              country,
-            },
+            address: parsed.label,
+            addressDetails: parsed.details,
           }));
-          setAddressQuery(feature.place_name);
+          setAddressQuery(parsed.label);
           setAddressSuggestions([]);
         } catch (err) {
           const message = err instanceof Error ? err.message : "Unable to use current location.";

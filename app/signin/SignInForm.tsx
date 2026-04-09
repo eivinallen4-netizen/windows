@@ -44,9 +44,9 @@ export default function SignInForm({ nextPath }: SignInFormProps) {
 
   return (
     <Card className="w-full max-w-md overflow-hidden border border-white/70 bg-white/90 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.45)] backdrop-blur">
-      <div className="h-2 w-full bg-gradient-to-r from-[#0b6fb2] via-sky-400 to-cyan-300" />
+      <div className="app-brand-strip" />
       <CardHeader className="space-y-3 pb-5">
-        <div className="inline-flex w-fit rounded-full border border-[#0b6fb2]/20 bg-[#0b6fb2]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#0b6fb2]">
+        <div className="app-kicker w-fit px-3 py-1 text-[11px]">
           Secure Access
         </div>
         <CardTitle className="text-2xl">Sign in</CardTitle>
@@ -81,7 +81,7 @@ export default function SignInForm({ nextPath }: SignInFormProps) {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-11 w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in…" : "Sign in"}
           </Button>
         </form>
       </CardContent>

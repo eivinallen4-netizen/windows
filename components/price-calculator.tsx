@@ -67,7 +67,7 @@ const defaultAddonConfig: AddonConfig[] = [
   {
     id: "interior",
     label: "Interior Cleaning",
-    description: "Both sides spotless — inside and out.",
+    description: "Both sides spotless, inside and out.",
     price: defaultPricing.addons.interior,
     free: false,
   },
@@ -248,13 +248,13 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
     ? breakdownItems.map((item) => `${item.count} ${item.label}`).join(", ")
     : "No windows yet";
   const breakdownShort = breakdownItems.length
-    ? breakdownItems.map((item) => `${item.count} ${item.label}`).join(" · ")
+    ? breakdownItems.map((item) => `${item.count} ${item.label}`).join(" | ")
     : "No windows";
 
   const isLight = variant === "light";
   const cardClass = isLight
     ? "w-full border border-slate-200 bg-white text-slate-900 shadow-lg"
-    : "w-full border border-slate-800 bg-[#0f172a] text-white shadow-lg";
+    : "w-full border border-slate-800 bg-slate-950 text-white shadow-lg";
   const titleClass = isLight ? "text-2xl text-slate-900" : "text-2xl text-white";
   const descClass = isLight ? "text-slate-500" : "text-slate-400";
   const stepTextClass = isLight
@@ -263,43 +263,43 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
   const labelClass = isLight ? "text-base font-semibold text-slate-900" : "text-base font-semibold text-white";
   const stepperButtonClass = isLight
     ? "h-12 w-12 rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
-    : "h-12 w-12 rounded-xl border border-slate-700 bg-[#0b1222] text-white hover:bg-[#111b33]";
+    : "h-12 w-12 rounded-xl border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
   const stepperValueClass = isLight
     ? "h-12 w-20 rounded-xl border border-slate-200 bg-white text-center text-lg font-semibold text-slate-900"
-    : "h-12 w-20 rounded-xl border border-slate-700 bg-[#0b1222] text-center text-lg font-semibold text-white";
+    : "h-12 w-20 rounded-xl border border-slate-800 bg-slate-950 text-center text-lg font-semibold text-white";
   const optionActiveClass = isLight
-    ? "h-auto justify-between rounded-2xl border border-[#0b6fb2] bg-[#eef6ff] px-4 py-4 text-left text-slate-900 shadow-sm"
-    : "h-auto justify-between rounded-2xl border border-[#0b6fb2] bg-[#0b1d33] px-4 py-4 text-left text-white shadow-sm";
+    ? "h-auto justify-between rounded-2xl border border-primary bg-primary/8 px-4 py-4 text-left text-slate-900 shadow-sm"
+    : "h-auto justify-between rounded-2xl border border-primary/35 bg-primary/15 px-4 py-4 text-left text-white shadow-sm";
   const optionInactiveClass = isLight
     ? "h-auto justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left text-slate-900 shadow-sm hover:bg-slate-50"
-    : "h-auto justify-between rounded-2xl border border-slate-700 bg-[#0b1222] px-4 py-4 text-left text-white shadow-sm hover:bg-[#111b33]";
+    : "h-auto justify-between rounded-2xl border border-slate-800 bg-slate-950 px-4 py-4 text-left text-white shadow-sm hover:bg-slate-900";
   const subMutedClass = isLight ? "text-slate-500" : "text-slate-400";
   const addonCardBase = isLight
     ? "border border-slate-200 bg-white shadow-sm"
-    : "border border-slate-700 bg-[#0b1222] shadow-sm";
+    : "border border-slate-800 bg-slate-950 shadow-sm";
   const addonIncluded = isLight
-    ? "border-[#0b6fb2] bg-[#eef6ff]"
-    : "border-[#0b6fb2] bg-[#0b1d33]";
+    ? "border-primary bg-primary/8"
+    : "border-primary/35 bg-primary/15";
   const addonSelected = isLight
     ? "border-slate-300 bg-slate-50"
-    : "border-slate-500 bg-[#111b33]";
+    : "border-slate-700 bg-slate-900";
   const badgeIncluded = isLight
     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
     : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300";
   const badgeSelected = isLight
     ? "border-slate-200 bg-white text-slate-600"
-    : "border-slate-600 bg-[#111b33] text-slate-200";
+    : "border-slate-700 bg-slate-900 text-slate-200";
   const badgeOptional = isLight ? "border-slate-200 text-slate-600" : "border-slate-700 text-slate-300";
   const primaryButton = isLight
-    ? "h-12 text-base bg-[#0b6fb2] text-white hover:bg-[#0a63a1]"
-    : "h-12 text-base bg-[#0b6fb2] text-white hover:bg-[#0a63a1]";
+    ? "h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+    : "h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90";
   const secondaryButton = isLight
     ? "h-12 text-base border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
-    : "h-12 text-base border border-slate-700 bg-[#0b1222] text-white hover:bg-[#111b33]";
+    : "h-12 text-base border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
   const outlineButton = isLight
     ? "h-12 w-full text-base border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
-    : "h-12 w-full text-base border border-slate-700 bg-[#0b1222] text-white hover:bg-[#111b33]";
-  const summaryCard = isLight ? "rounded-xl bg-[#0b6fb2] text-white" : "rounded-xl bg-[#0b6fb2] text-white";
+    : "h-12 w-full text-base border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
+  const summaryCard = "rounded-xl bg-primary text-primary-foreground";
 
   return (
     <Card className={cardClass}>
@@ -331,7 +331,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white">
-                          <Icon className="size-4 text-[#0b6fb2]" />
+                          <Icon className="size-4 text-primary" />
                         </span>
                         <div>
                           <p className="text-sm font-semibold">{option.label}</p>
@@ -396,7 +396,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                     onClick={() => updateSelection({ storyLevel: option.id })}
                   >
                     <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white">
-                      <Icon className="size-4 text-[#0b6fb2]" />
+                      <Icon className="size-4 text-primary" />
                     </span>
                     <span className="text-sm font-semibold">{option.label}</span>
                   </Button>
@@ -422,12 +422,12 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3">
                         <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white">
-                          <Icon className="size-4 text-[#0b6fb2]" />
+                          <Icon className="size-4 text-primary" />
                         </span>
                         <div>
                           <p className="text-sm font-semibold">{option.label}</p>
                           <p className={`text-xs ${subMutedClass}`}>{option.description}</p>
-                          <p className="mt-2 text-xs font-semibold text-[#0b6fb2]">
+                          <p className="mt-2 text-xs font-semibold text-primary">
                             {included ? "Included" : addonRate === 0 ? "Free" : `+ $${addonRate.toFixed(2)} / window`}
                           </p>
                         </div>
@@ -477,7 +477,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                   return (
                     <div key={item.id} className="flex items-center justify-between border-t pt-3 text-slate-600">
                       <span>
-                        {item.count} × {item.label}
+                        {item.count} x {item.label}
                       </span>
                       <span>${lineTotal.toFixed(2)}</span>
                     </div>
@@ -491,7 +491,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
               )}
               <div className="flex items-center justify-between text-slate-600">
                 <span>{storyLabel}</span>
-                <span>{totals.storySurcharge ? `$${totals.storySurcharge.toFixed(2)}` : "—"}</span>
+                <span>{totals.storySurcharge ? `$${totals.storySurcharge.toFixed(2)}` : "-"}</span>
               </div>
               {addonsConfig
                 .filter((option) => selections.addons[option.id])
@@ -566,7 +566,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
               ) : null}
             </div>
 
-            <Card className={isLight ? "border-slate-200" : "border-slate-800 bg-[#0b1222]"}>
+            <Card className={isLight ? "border-slate-200" : "border-slate-800 bg-slate-950"}>
               <CardHeader className="pb-3">
                 <CardTitle className={isLight ? "text-lg text-slate-900" : "text-lg text-white"}>
                   Quote summary

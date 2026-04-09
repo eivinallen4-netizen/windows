@@ -14,12 +14,12 @@ export default async function ReviewsPage() {
   const reviews = await getReviews();
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,_#f7fbff_0%,_#eef5fa_100%)]">
+    <div className="app-page-shell-soft">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl space-y-5 px-4 py-8 sm:space-y-6">
-        <Card className="overflow-hidden border-white/70 bg-white/85 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur">
+        <Card className="app-surface-panel">
           <CardHeader className="gap-3 pb-4">
-            <Badge className="w-fit bg-[#0b6fb2] text-white hover:bg-[#0b6fb2]">Customer Results</Badge>
+            <Badge className="w-fit bg-primary text-primary-foreground hover:bg-primary">Customer Results</Badge>
             <CardTitle className="text-2xl sm:text-3xl">Before & After Reviews</CardTitle>
           </CardHeader>
           <CardContent>

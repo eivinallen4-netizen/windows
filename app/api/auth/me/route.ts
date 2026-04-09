@@ -18,11 +18,13 @@ export async function GET(request: Request) {
       id: storedUser?.id ?? session.userId,
       email: storedUser?.email ?? session.email,
       name: storedUser?.name ?? session.name,
-      role: storedUser?.role ?? session.role,
+      role: session.role,
       phone: storedUser?.phone ?? session.phone,
       birthday: storedUser?.birthday ?? session.birthday,
       profile_completed_at: storedUser?.profile_completed_at ?? session.profile_completed_at,
       is_admin: storedUser?.is_admin ?? session.is_admin,
+      original_role: session.originalRole ?? storedUser?.role ?? session.role,
+      is_test_mode: Boolean(session.is_test_mode),
     },
   });
 }

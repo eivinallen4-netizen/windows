@@ -1,15 +1,20 @@
 const SESSION_COOKIE = "pb_session";
+const ROLE_OVERRIDE_COOKIE = "pb_role_override";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+
+export type AppAuthRole = "admin" | "rep" | "tech";
 
 export type AuthSession = {
   userId: string;
   email: string;
   name?: string;
-  role: "admin" | "rep" | "tech";
+  role: AppAuthRole;
   phone?: string;
   birthday?: string;
   profile_completed_at?: string;
   is_admin: boolean;
+  originalRole?: AppAuthRole;
+  is_test_mode?: boolean;
   exp: number;
 };
 
@@ -90,6 +95,14 @@ export function getSessionCookieName() {
   return SESSION_COOKIE;
 }
 
+export function getRoleOverrideCookieName() {
+  return ROLE_OVERRIDE_COOKIE;
+}
+
+function isValidRole(value: string | undefined | null): value is AppAuthRole {
+  return value === "admin" || value === "rep" || value === "tech";
+}
+
 export async function createSessionToken(
   user: Omit<AuthSession, "exp">,
   ttlMs: number = SESSION_TTL_MS
@@ -114,9 +127,11 @@ export async function verifySessionToken(token: string): Promise<AuthSession | n
   if (!ok) return null;
   const decoded = decodeTokenPayload(payload);
   if (!decoded) return null;
-  if (!decoded.role) {
+  if (!decoded.role || !isValidRole(decoded.role)) {
     decoded.role = decoded.is_admin ? "admin" : "rep";
   }
+  decoded.originalRole = isValidRole(decoded.originalRole) ? decoded.originalRole : decoded.role;
+  decoded.is_test_mode = false;
   if (decoded.exp < Date.now()) return null;
   return decoded;
 }
@@ -159,5 +174,14 @@ export async function getSessionFromRequest(request: Request): Promise<AuthSessi
   const cookies = parseCookieHeader(cookieHeader);
   const token = cookies[SESSION_COOKIE];
   if (!token) return null;
-  return verifySessionToken(token);
+  const session = await verifySessionToken(token);
+  if (!session) return null;
+
+  const overrideRole = cookies[ROLE_OVERRIDE_COOKIE];
+  if (session.is_admin && isValidRole(overrideRole)) {
+    session.role = overrideRole;
+    session.is_test_mode = overrideRole !== session.originalRole;
+  }
+
+  return session;
 }

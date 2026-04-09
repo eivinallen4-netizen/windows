@@ -18,8 +18,9 @@ export function ReviewShowcaseCard({ review }: ReviewShowcaseCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const hasAfter = Boolean(review.houseAfterPhotoUrl);
   const cardRef = useRef<HTMLElement>(null);
-  const beforeIsUpload = review.houseBeforePhotoUrl.startsWith("/uploads/");
-  const afterIsUpload = review.houseAfterPhotoUrl?.startsWith("/uploads/") ?? false;
+  const beforeIsDirectFile = review.houseBeforePhotoUrl.startsWith("/uploads/") || review.houseBeforePhotoUrl.startsWith("/api/files?");
+  const afterIsDirectFile =
+    review.houseAfterPhotoUrl?.startsWith("/uploads/") || review.houseAfterPhotoUrl?.startsWith("/api/files?") || false;
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -56,7 +57,7 @@ export function ReviewShowcaseCard({ review }: ReviewShowcaseCardProps) {
         alt={`${review.name} house before cleaning`}
         fill
         className="object-cover"
-        unoptimized={beforeIsUpload}
+        unoptimized={beforeIsDirectFile}
       />
 
       {hasAfter && review.houseAfterPhotoUrl && (
@@ -67,7 +68,7 @@ export function ReviewShowcaseCard({ review }: ReviewShowcaseCardProps) {
               alt={`${review.name} house after cleaning`}
               fill
               className="object-cover"
-              unoptimized={afterIsUpload}
+              unoptimized={afterIsDirectFile}
             />
           </div>
           <div

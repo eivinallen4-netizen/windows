@@ -174,6 +174,15 @@ async function ensureSchema() {
           },
           {
             sql: `
+              CREATE TABLE IF NOT EXISTS schedules (
+                week_start TEXT PRIMARY KEY,
+                updated_at TEXT,
+                data TEXT NOT NULL
+              )
+            `,
+          },
+          {
+            sql: `
               CREATE TABLE IF NOT EXISTS quotes (
                 id TEXT PRIMARY KEY,
                 created_at TEXT,

@@ -146,10 +146,10 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
 
   return (
     <div className={`grid w-full gap-6 lg:grid-cols-[1.1fr,1fr] ${className ?? ""}`}>
-      <Card className="h-fit border border-slate-800 bg-[#0f172a] text-white">
+      <Card className="h-fit border border-slate-200 bg-white text-slate-900">
         <CardHeader>
           <CardTitle>Admin Panel</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-slate-600">
             Before photo required. After and profile photos optional.
           </CardDescription>
         </CardHeader>
@@ -157,19 +157,19 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-300">Customer Name</Label>
+              <Label htmlFor="name" className="text-slate-700">Customer Name</Label>
               <Input
                 id="name"
                 required
                 value={form.name}
                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                className="bg-[#1e293b] border-slate-800 text-white"
+                className="border-slate-300 bg-white text-slate-900"
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="house-before" className="text-slate-300">House Before Photo (required)</Label>
+                <Label htmlFor="house-before" className="text-slate-700">House Before Photo (required)</Label>
                 <Input
                   id="house-before"
                   key={`before-${uploadKey}`}
@@ -178,14 +178,14 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, houseBeforePhoto: event.target.files?.[0] ?? null }))
                   }
-                  className="bg-[#1e293b] border-slate-800 text-slate-200 file:text-slate-200"
+                  className="border-slate-300 bg-white text-slate-700 file:text-slate-700"
                 />
                 {editingId ? (
-                  <p className="text-xs text-slate-400">Leave blank to keep the existing before photo.</p>
+                  <p className="text-xs text-slate-500">Leave blank to keep the existing before photo.</p>
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="house-after" className="text-slate-300">House After Photo (optional)</Label>
+                <Label htmlFor="house-after" className="text-slate-700">House After Photo (optional)</Label>
                 <Input
                   id="house-after"
                   key={`after-${uploadKey}`}
@@ -194,16 +194,16 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, houseAfterPhoto: event.target.files?.[0] ?? null }))
                   }
-                  className="bg-[#1e293b] border-slate-800 text-slate-200 file:text-slate-200"
+                  className="border-slate-300 bg-white text-slate-700 file:text-slate-700"
                 />
                 {editingId ? (
-                  <p className="text-xs text-slate-400">Leave blank to keep the existing after photo.</p>
+                  <p className="text-xs text-slate-500">Leave blank to keep the existing after photo.</p>
                 ) : null}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="profile" className="text-slate-300">Profile Photo (optional)</Label>
+              <Label htmlFor="profile" className="text-slate-700">Profile Photo (optional)</Label>
               <Input
                 id="profile"
                 key={`pfp-${uploadKey}`}
@@ -212,15 +212,15 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, customerPhoto: event.target.files?.[0] ?? null }))
                 }
-                className="bg-[#1e293b] border-slate-800 text-slate-200 file:text-slate-200"
+                className="border-slate-300 bg-white text-slate-700 file:text-slate-700"
               />
               {editingId ? (
-                <p className="text-xs text-slate-400">Leave blank to keep the existing profile photo.</p>
+                <p className="text-xs text-slate-500">Leave blank to keep the existing profile photo.</p>
               ) : null}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Star Rating</Label>
+              <Label className="text-slate-700">Star Rating</Label>
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Button
@@ -239,7 +239,7 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="panels" className="text-slate-300">Number of Panels</Label>
+              <Label htmlFor="panels" className="text-slate-700">Number of Panels</Label>
               <Input
                 id="panels"
                 required
@@ -249,12 +249,12 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, panels: Number(event.target.value) || 0 }))
                 }
-                className="bg-[#1e293b] border-slate-800 text-white"
+                className="border-slate-300 bg-white text-slate-900"
               />
             </div>
 
             <div className="space-y-3">
-              <Label className="text-slate-300">Acquisition Type</Label>
+              <Label className="text-slate-700">Acquisition Type</Label>
               <RadioGroup
                 value={form.acquisitionType}
                 onValueChange={(value) =>
@@ -262,25 +262,25 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                 }
                 className="grid gap-2 sm:grid-cols-2"
               >
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 border-slate-800 bg-[#0f172a]">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <RadioGroupItem value="They called us" id="called" />
-                  <span className="text-sm text-slate-200">They Called</span>
+                  <span className="text-sm text-slate-700">They Called</span>
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 border-slate-800 bg-[#0f172a]">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <RadioGroupItem value="We knocked" id="knocked" />
-                  <span className="text-sm text-slate-200">We Knocked</span>
+                  <span className="text-sm text-slate-700">We Knocked</span>
                 </label>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="testimonial" className="text-slate-300">Testimonial (optional)</Label>
+              <Label htmlFor="testimonial" className="text-slate-700">Testimonial (optional)</Label>
               <Textarea
                 id="testimonial"
                 rows={3}
                 value={form.testimonial}
                 onChange={(event) => setForm((prev) => ({ ...prev, testimonial: event.target.value }))}
-                className="bg-[#1e293b] border-slate-800 text-white"
+                className="border-slate-300 bg-white text-slate-900"
               />
             </div>
 
@@ -295,41 +295,41 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
               </Button>
             ) : null}
 
-            {status && <p className="text-sm text-slate-400">{status}</p>}
+            {status && <p className="text-sm text-slate-600">{status}</p>}
           </form>
         </CardContent>
       </Card>
 
-      <Card className="border border-slate-800 bg-[#0f172a] text-white">
+      <Card className="border border-slate-200 bg-white text-slate-900">
         <CardHeader>
           <CardTitle>Existing Reviews</CardTitle>
-          <CardDescription className="text-slate-400">{reviews.length} total records</CardDescription>
+          <CardDescription className="text-slate-600">{reviews.length} total records</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {reviews.map((review) => (
-            <div key={review.id} className="rounded-lg border border-slate-800 bg-[#0f172a] p-3">
+            <div key={review.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                     <Avatar>
                       <AvatarImage src={review.customerPhotoUrl} alt={review.name} />
-                    <AvatarFallback className="bg-[#1e293b]">
+                    <AvatarFallback className="bg-slate-200">
                       <Image src="/logo.png" alt="PureBin logo" width={20} height={20} className="size-5 object-contain" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{review.name}</p>
-                    <p className="mt-1 text-xs text-slate-400">{review.panels} panels</p>
+                    <p className="mt-1 text-xs text-slate-500">{review.panels} panels</p>
                     <StarRating rating={review.rating} className="mt-1 text-amber-500" />
                     <div className="mt-2 flex flex-wrap gap-1">
                       <Badge
                         variant="secondary"
-                        className="border border-slate-700 bg-[#111b33] text-slate-200 hover:bg-[#111b33]"
+                        className="border border-slate-200 bg-sky-50 text-slate-700 hover:bg-sky-50"
                       >
                         {review.acquisitionType}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className="border border-slate-700 bg-[#0b1222] text-slate-300"
+                        className="border border-slate-200 bg-white text-slate-600"
                       >
                         {review.houseAfterPhotoUrl ? "Before + After" : "Before only"}
                       </Badge>
@@ -359,7 +359,7 @@ export function AdminPanel({ initialReviews, className }: AdminPanelProps) {
                 </div>
               </div>
               <Separator className="my-3" />
-              <p className="line-clamp-2 text-xs text-slate-400">
+              <p className="line-clamp-2 text-xs text-slate-500">
                 {review.testimonial ? `"${review.testimonial}"` : "No testimonial provided."}
               </p>
             </div>

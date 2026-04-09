@@ -4,10 +4,14 @@ import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
 export type ContactRecord = {
   id: string;
-  email: string;
+  email?: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
+  address?: string;
+  paneCount?: number;
+  notes?: string;
+  source?: string;
   created_at: string;
   brevo?: { id?: number | string };
 };
@@ -45,9 +49,10 @@ export async function writeContacts(contacts: ContactRecord[]) {
   if (hasTursoConfig()) {
     await tursoExecute("DELETE FROM contacts");
     for (const contact of contacts) {
+      const storageEmail = contact.email?.toLowerCase() ?? `lead+${contact.id}@purebin.local`;
       await tursoExecute({
         sql: "INSERT INTO contacts (id, email, created_at, data) VALUES (?, ?, ?, ?)",
-        args: [contact.id, contact.email.toLowerCase(), contact.created_at, JSON.stringify(contact)],
+        args: [contact.id, storageEmail, contact.created_at, JSON.stringify(contact)],
       });
     }
     return;

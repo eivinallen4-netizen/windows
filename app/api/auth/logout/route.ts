@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName } from "@/lib/auth";
+import { getRoleOverrideCookieName, getSessionCookieName } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +16,15 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: getSessionCookieName(),
+    value: "",
+    httpOnly: true,
+    secure: isSecureRequest(request),
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  response.cookies.set({
+    name: getRoleOverrideCookieName(),
     value: "",
     httpOnly: true,
     secure: isSecureRequest(request),

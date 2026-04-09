@@ -17,28 +17,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PortalSwitcher } from "@/components/portal-switcher";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { AdminPanel } from "@/components/admin-panel";
+import { SiteHeader } from "@/components/site-header";
+import { ScheduleWindowSettings } from "@/components/schedule-window-settings";
+import { ScheduleAdminLinks } from "@/components/schedule-admin-links";
 import { UsersAdminPanel } from "@/components/users-admin-panel";
 import { defaultPricing, type PaneType, type Pricing, type StoryLevel } from "@/lib/pricing";
 import { computeQuote, type AddOnSelection, type QuoteSelections } from "@/lib/quote";
+import { defaultScheduleWindows, type ScheduleWindowsConfig } from "@/lib/schedule-types";
 
 export const dynamic = "force-dynamic";
 
 const COLORS = {
-  page: "#020817",
-  sidebar: "#0a0f1e",
-  card: "#0f172a",
-  input: "#1e293b",
-  border: "#334155",
-  borderDark: "#1f2937",
-  textMuted: "#94a3b8",
+  page: "#edf5ff",
+  sidebar: "#f8fbff",
+  card: "#ffffff",
+  input: "#ffffff",
+  border: "#dbe7f5",
+  borderDark: "#dbe7f5",
+  textMuted: "#64748b",
   textMuted2: "#64748b",
   indigo: "#6366f1",
   sky: "#0ea5e9",
-  slate: "#1e293b",
+  slate: "#e2e8f0",
 };
 const paneTypeRows: { id: PaneType; label: string; icon: typeof Square }[] = [
   { id: "standard", label: "Standard", icon: Square },
@@ -88,6 +91,7 @@ type AppConfig = {
   pricing: Pricing;
   addonsConfig: AddonConfig[];
   repCommissionPercent: number;
+  scheduleWindows: ScheduleWindowsConfig;
   plans: {
     activePlan: AppPlan;
     free: {
@@ -158,8 +162,9 @@ export default function AdminPage() {
   const [activePlan, setActivePlan] = useState<AppPlan>("pro");
   const [freeAddons, setFreeAddons] = useState(true);
   const [repCommissionPercent, setRepCommissionPercent] = useState(25);
+  const [scheduleWindows, setScheduleWindows] = useState<ScheduleWindowsConfig>(defaultScheduleWindows);
   const [activeSection, setActiveSection] = useState<
-    "quotes" | "reps" | "reviews" | "jobs" | "pricing" | "addons" | "email" | "users"
+    "quotes" | "reps" | "reviews" | "jobs" | "schedule" | "pricing" | "addons" | "email" | "users"
   >("quotes");
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -208,6 +213,31 @@ export default function AdminPage() {
   const [emailLoaded, setEmailLoaded] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [usersLoaded, setUsersLoaded] = useState(false);
+  const [resetConfirmation, setResetConfirmation] = useState("");
+  const [resetStatus, setResetStatus] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resettingData, setResettingData] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const section = new URLSearchParams(window.location.search).get("section");
+    if (
+      section === "quotes" ||
+      section === "reps" ||
+      section === "reviews" ||
+      section === "jobs" ||
+      section === "schedule" ||
+      section === "pricing" ||
+      section === "addons" ||
+      section === "email" ||
+      section === "users"
+    ) {
+      setActiveSection(section);
+    }
+  }, []);
 
   useEffect(() => {
     document.title = "Admin | PureBin Window Cleaning";
@@ -268,12 +298,14 @@ export default function AdminPage() {
           setRepCommissionPercent(
             Number.isFinite(data.repCommissionPercent) ? data.repCommissionPercent : 25
           );
+          setScheduleWindows(data.scheduleWindows ?? defaultScheduleWindows);
           setPricingJson(JSON.stringify(data.pricing, null, 2));
           setPricingJsonError(null);
           lastSavedRef.current = JSON.stringify({
             pricing: data.pricing,
             addonsConfig: data.addonsConfig ?? [],
             repCommissionPercent: Number.isFinite(data.repCommissionPercent) ? data.repCommissionPercent : 25,
+            scheduleWindows: data.scheduleWindows ?? defaultScheduleWindows,
             plans: { activePlan: data.plans.activePlan, free: { addonsFree: data.plans.free.addonsFree } },
           });
           autoSaveReadyRef.current = true;
@@ -788,6 +820,7 @@ export default function AdminPage() {
       pricing,
       addonsConfig,
       repCommissionPercent,
+      scheduleWindows,
       plans: {
         activePlan,
         free: {
@@ -795,8 +828,67 @@ export default function AdminPage() {
         },
       },
     }),
-    [pricing, addonsConfig, repCommissionPercent, activePlan, freeAddons]
+    [pricing, addonsConfig, repCommissionPercent, scheduleWindows, activePlan, freeAddons]
   );
+
+  async function handleResetNonUserData() {
+    setResetError(null);
+    setResetStatus(null);
+
+    if (resetConfirmation.trim() !== "RESET") {
+      setResetError("Type RESET before clearing non-user data.");
+      return;
+    }
+
+    setResettingData(true);
+    try {
+      const response = await fetch("/api/admin/reset-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: resetConfirmation.trim() }),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        message?: string;
+        config?: AppConfig;
+      };
+
+      if (!response.ok || !payload.config) {
+        throw new Error(payload.error || "Unable to reset admin data.");
+      }
+
+      setPricing(payload.config.pricing);
+      setAddonsConfig(payload.config.addonsConfig ?? []);
+      setRepCommissionPercent(payload.config.repCommissionPercent ?? 25);
+      setScheduleWindows(payload.config.scheduleWindows ?? defaultScheduleWindows);
+      setActivePlan(payload.config.plans?.activePlan ?? "pro");
+      setFreeAddons(payload.config.plans?.free?.addonsFree ?? true);
+      setPricingJson(JSON.stringify(payload.config.pricing, null, 2));
+      setPricingJsonError(null);
+      setQuotes([]);
+      setSelectedQuote(null);
+      setQuoteJson("");
+      setQuoteJsonError(null);
+      setQuotesError(null);
+      setJobs([]);
+      setJobsError(null);
+      setTransactions([]);
+      setTransactionsError(null);
+      setContacts([]);
+      setContactsError(null);
+      setTestJobStatus(null);
+      setTestJobError(null);
+      setContactStatus(null);
+      setEmailStatus(null);
+      setResetStatus(payload.message || "Non-user data reset.");
+      setResetConfirmation("");
+      setToast("Non-user data reset.");
+    } catch (err) {
+      setResetError(err instanceof Error ? err.message : "Unable to reset admin data.");
+    } finally {
+      setResettingData(false);
+    }
+  }
 
   const handleSave = useCallback(async () => {
     setError(null);
@@ -1090,6 +1182,7 @@ export default function AdminPage() {
     { id: "reps", label: "Reps" },
     { id: "reviews", label: "Reviews" },
     { id: "jobs", label: "Jobs" },
+    { id: "schedule", label: "Schedule" },
     { id: "pricing", label: "Pricing" },
     { id: "addons", label: "Add-ons" },
     { id: "email", label: "Email" },
@@ -1098,9 +1191,10 @@ export default function AdminPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#020817] px-4 py-10 text-white">
-        <div className="mx-auto max-w-3xl">
-          <p className="text-sm text-slate-400">Checking admin access...</p>
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-4 py-10">
+          <p className="text-sm text-muted-foreground">Checking admin access...</p>
         </div>
       </div>
     );
@@ -1108,19 +1202,24 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#020817] px-4 py-10 text-white">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-slate-800 bg-[#0f172a] p-6">
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-4 py-10">
+          <div className="rounded-2xl border border-border bg-card p-6">
           <h1 className="text-xl font-semibold">Admin access required</h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             This page only works for admin sessions. Sign in with an admin account to load jobs, users, and admin tools.
           </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: COLORS.page }}>
+    <div className="min-h-screen" style={{ background: COLORS.page }}>
+      <SiteHeader />
+      <div className="flex min-h-[calc(100vh-73px)]">
       <div
         className="w-64 hidden md:flex flex-col flex-shrink-0 border-r"
         style={{ background: COLORS.sidebar, borderColor: COLORS.borderDark }}
@@ -1134,7 +1233,7 @@ export default function AdminPage() {
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
-              <p className="text-white font-black text-base leading-none">PureBin LV</p>
+              <p className="font-black text-base leading-none text-foreground">PureBin LV</p>
               <p className="text-xs mt-0.5" style={{ color: COLORS.textMuted2 }}>
                 Admin Panel
               </p>
@@ -1151,7 +1250,7 @@ export default function AdminPage() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
                 activeSection === item.id
                   ? "text-white"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
               }`}
               style={
                 activeSection === item.id
@@ -1174,46 +1273,25 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t px-1 py-1"
-        style={{ background: COLORS.sidebar, borderColor: COLORS.borderDark }}
-      >
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveSection(item.id)}
-            className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-xs rounded-lg transition-all ${
-              activeSection === item.id ? "text-indigo-400" : "text-slate-500"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-auto pb-20 md:pb-0">
         <div
-          className="border-b px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-10"
-          style={{ background: COLORS.page, borderColor: COLORS.borderDark }}
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t px-1 py-1"
+          style={{ background: COLORS.sidebar, borderColor: COLORS.borderDark }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.sky})` }}
+          {tabs.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-xs rounded-lg transition-all ${
+                activeSection === item.id ? "text-indigo-500" : "text-slate-500"
+              }`}
             >
-              <Sparkles size={14} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-white text-lg font-black">Admin Settings</h1>
-              <p className="text-xs" style={{ color: COLORS.textMuted2 }}>
-                Changes apply immediately
-              </p>
-            </div>
-          </div>
-          <PortalSwitcher role="admin" className="hidden md:flex items-center gap-2" />
+              {item.label}
+            </button>
+          ))}
         </div>
 
-        <div className="px-4 md:px-10 py-6">
+        <div className="flex-1 overflow-auto pb-20 md:pb-0">
+          <div className="px-4 md:px-10 py-6">
 
         {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
         {quotesError ? <p className="mb-4 text-sm text-destructive">{quotesError}</p> : null}
@@ -1225,14 +1303,14 @@ export default function AdminPage() {
         ) : null}
 
           {activeSection === "quotes" ? (
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Quote Review</CardTitle>
               <CardDescription>Admins can review and edit saved quotes.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {quotes.length === 0 ? (
-                <p className="text-sm text-slate-400">No saved quotes yet.</p>
+                <p className="text-sm text-slate-600">No saved quotes yet.</p>
               ) : (
                 <div className="grid gap-2">
                   {quotes.map((quote) => (
@@ -1242,16 +1320,16 @@ export default function AdminPage() {
                       variant={selectedQuote?.index === quote.index ? "default" : "outline"}
                       className={`h-auto justify-between px-4 py-3 text-left border ${
                         selectedQuote?.index === quote.index
-                          ? "bg-[#0ea5e9] text-white border-transparent"
-                          : "bg-[#0f172a] text-white border-slate-800 hover:bg-[#111827]"
+                          ? "border-transparent bg-primary text-primary-foreground"
+                          : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                       }`}
                       onClick={() => selectQuote(quote)}
                     >
                       <span>
                         <span className="block text-sm font-semibold">{quote.user.name}</span>
-                        <span className="block text-xs text-slate-400">{quote.user.email}</span>
+                        <span className="block text-xs text-slate-600">{quote.user.email}</span>
                         {quote.rep ? (
-                          <span className="block text-xs text-slate-400">
+                          <span className="block text-xs text-slate-600">
                             Rep: {quote.rep.name} ({quote.rep.email})
                           </span>
                         ) : null}
@@ -1266,7 +1344,7 @@ export default function AdminPage() {
                 <div className="space-y-4 rounded-lg border p-4">
                   <p className="text-sm font-semibold">Selected Quote</p>
                   {selectedQuote.rep ? (
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-600">
                       Rep: {selectedQuote.rep.name} ({selectedQuote.rep.email})
                     </p>
                   ) : null}
@@ -1367,7 +1445,7 @@ export default function AdminPage() {
                     })}
                   </div>
 
-                <div className="rounded-lg bg-[#0f172a] p-3 text-sm">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                   <div className="flex items-center justify-between">
                     <span>Updated total</span>
                     <span className="font-semibold">
@@ -1417,7 +1495,7 @@ export default function AdminPage() {
           ) : null}
 
           {activeSection === "reviews" ? (
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Review Admin</CardTitle>
               <CardDescription>Add, edit, or delete customer reviews stored in JSON.</CardDescription>
@@ -1430,14 +1508,14 @@ export default function AdminPage() {
 
           {activeSection === "jobs" ? (
           <div className="space-y-6">
-            <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+            <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
               <CardHeader>
                 <CardTitle>Create Job</CardTitle>
                 <CardDescription>Manually add a job for direct scheduling or offline follow-up.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {testJobError ? <p className="text-sm text-destructive">{testJobError}</p> : null}
-                {testJobStatus ? <p className="text-sm text-slate-400">{testJobStatus}</p> : null}
+                {testJobStatus ? <p className="text-sm text-slate-600">{testJobStatus}</p> : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="test-job-name">Customer name</Label>
@@ -1499,7 +1577,7 @@ export default function AdminPage() {
                       id="test-job-payment-status"
                       value={testJobPaymentStatus}
                       onChange={(event) => setTestJobPaymentStatus(event.target.value)}
-                      className="h-10 w-full rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
+                      className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
                     >
                       <option value="pending">pending</option>
                       <option value="authorized">authorized</option>
@@ -1514,7 +1592,7 @@ export default function AdminPage() {
                       id="test-job-tech"
                       value={testJobTechEmail}
                       onChange={(event) => setTestJobTechEmail(event.target.value)}
-                      className="h-10 w-full rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
+                      className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
                     >
                       <option value="">Unassigned</option>
                       {techUsers.map((tech) => (
@@ -1535,7 +1613,7 @@ export default function AdminPage() {
                         const rep = repUsers.find((user) => user.email === email);
                         setTestJobRepName(rep?.name ?? "");
                       }}
-                      className="h-10 w-full rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
+                      className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
                     >
                       <option value="">Unassigned</option>
                       {repUsers.map((rep) => (
@@ -1553,7 +1631,7 @@ export default function AdminPage() {
                       value={testJobPaymentIntentId}
                       onChange={(event) => setTestJobPaymentIntentId(event.target.value)}
                     />
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-600">
                       This is the Stripe payment reference used to capture funds later. Leave it empty for unpaid jobs.
                     </p>
                   </div>
@@ -1566,7 +1644,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+            <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
               <CardHeader>
                 <CardTitle>Jobs</CardTitle>
                 <CardDescription>Assign techs and monitor job status.</CardDescription>
@@ -1574,37 +1652,37 @@ export default function AdminPage() {
               <CardContent className="space-y-4">
                 {jobsError ? <p className="text-sm text-destructive">{jobsError}</p> : null}
                 {jobsLoading ? (
-                  <p className="text-sm text-slate-400">Loading jobs...</p>
+                  <p className="text-sm text-slate-600">Loading jobs...</p>
                 ) : jobs.length === 0 ? (
-                  <p className="text-sm text-slate-400">No jobs yet.</p>
+                  <p className="text-sm text-slate-600">No jobs yet.</p>
                 ) : (
                   <div className="grid gap-3">
                     {jobs.map((job) => (
-                      <div key={job.id} className="rounded-lg border border-slate-800 bg-[#0f172a] p-3">
+                      <div key={job.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold">
                               {job.customer?.name || "Customer"}{" "}
-                              <span className="text-xs text-slate-400">{job.customer?.email || ""}</span>
+                              <span className="text-xs text-slate-600">{job.customer?.email || ""}</span>
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-600">
                               Service: {job.service_date || "TBD"}{" "}
                               {job.service_time ? `at ${job.service_time}` : ""}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-600">
                               Status: {job.completed_at ? "Completed" : job.started_at ? "In progress" : "New"}
                             </p>
-                            <p className="text-xs text-slate-400">Payment: {job.payment_status || "pending"}</p>
+                            <p className="text-xs text-slate-600">Payment: {job.payment_status || "pending"}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Label htmlFor={`job-tech-${job.id}`} className="text-xs text-slate-400">
+                            <Label htmlFor={`job-tech-${job.id}`} className="text-xs text-slate-600">
                               Tech
                             </Label>
                             <select
                               id={`job-tech-${job.id}`}
                               value={job.assigned_tech_email ?? ""}
                               onChange={(event) => handleAssignTech(job.id, event.target.value)}
-                              className="h-9 rounded-md border border-slate-800 bg-[#0f172a] px-2 text-xs text-white"
+                              className="h-9 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-900"
                             >
                               <option value="">Unassigned</option>
                               {techUsers.map((tech) => (
@@ -1626,23 +1704,23 @@ export default function AdminPage() {
 
           {activeSection === "email" ? (
           <div className="grid gap-6">
-            <div className="rounded-2xl border bg-[#0f172a] p-4 sm:p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">Email</h2>
-                  <p className="text-sm text-slate-400">Clean workspace for sending and contacts.</p>
+                  <p className="text-sm text-slate-600">Clean workspace for sending and contacts.</p>
                 </div>
               </div>
               <div className="grid gap-6 lg:grid-cols-[1.1fr,1fr]">
-            <Card className="border border-slate-800 bg-[#0f172a] text-white">
+            <Card className="border border-slate-200 bg-white text-slate-900">
               <CardHeader>
                 <CardTitle>Compose</CardTitle>
                 <CardDescription>Send via SMTP (Brevo).</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3">
-                  <div className="flex items-center gap-3 rounded-full border bg-[#0f172a] px-4 py-2">
-                    <span className="text-xs font-semibold text-slate-400">To</span>
+                  <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                    <span className="text-xs font-semibold text-slate-600">To</span>
                     <input
                       className="w-full bg-transparent text-sm outline-none"
                       type="email"
@@ -1651,8 +1729,8 @@ export default function AdminPage() {
                       placeholder="name@example.com"
                     />
                   </div>
-                  <div className="flex items-center gap-3 rounded-full border bg-[#0f172a] px-4 py-2">
-                    <span className="text-xs font-semibold text-slate-400">Subject</span>
+                  <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                    <span className="text-xs font-semibold text-slate-600">Subject</span>
                     <input
                       className="w-full bg-transparent text-sm outline-none"
                       value={emailSubject}
@@ -1660,7 +1738,7 @@ export default function AdminPage() {
                       placeholder="Subject"
                     />
                   </div>
-                  <div className="rounded-xl border bg-[#0f172a] p-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <Textarea
                       id="email-message"
                       rows={10}
@@ -1675,12 +1753,12 @@ export default function AdminPage() {
                   <Button type="button" onClick={handleSendEmail} disabled={sendingEmail} className="rounded-full">
                     {sendingEmail ? "Sending..." : "Send"}
                   </Button>
-                  {emailStatus ? <p className="text-sm text-slate-400">{emailStatus}</p> : null}
+                  {emailStatus ? <p className="text-sm text-slate-600">{emailStatus}</p> : null}
                 </div>
               </CardContent>
             </Card>
 
-              <Card className="border border-slate-800 bg-[#0f172a] text-white">
+              <Card className="border border-slate-200 bg-white text-slate-900">
                 <CardHeader>
                   <CardTitle>Contacts</CardTitle>
                   <CardDescription>Create a Brevo contact and save it locally.</CardDescription>
@@ -1726,28 +1804,28 @@ export default function AdminPage() {
                     <Button type="button" onClick={handleCreateContact} className="rounded-full">
                       Add Contact
                     </Button>
-                    {contactStatus ? <p className="text-sm text-slate-400">{contactStatus}</p> : null}
+                    {contactStatus ? <p className="text-sm text-slate-600">{contactStatus}</p> : null}
                   </div>
 
                   <Separator />
 
                   {contactsError ? <p className="text-sm text-destructive">{contactsError}</p> : null}
                   {contactsLoading ? (
-                    <p className="text-sm text-slate-400">Loading contacts...</p>
+                    <p className="text-sm text-slate-600">Loading contacts...</p>
                   ) : contacts.length === 0 ? (
-                    <p className="text-sm text-slate-400">No contacts saved yet.</p>
+                    <p className="text-sm text-slate-600">No contacts saved yet.</p>
                   ) : (
                     <div className="grid gap-3">
                       {contacts.map((contact) => (
-                        <div key={contact.id} className="rounded-lg border bg-[#0f172a] p-3">
+                        <div key={contact.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                           <p className="text-sm font-semibold">
                             {[contact.firstName, contact.lastName].filter(Boolean).join(" ") || "Unnamed"}
                           </p>
-                          <p className="text-xs text-slate-400">{contact.email}</p>
+                          <p className="text-xs text-slate-600">{contact.email}</p>
                           {contact.phone ? (
-                            <p className="text-xs text-slate-400">{contact.phone}</p>
+                            <p className="text-xs text-slate-600">{contact.phone}</p>
                           ) : null}
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-600">
                             {new Date(contact.created_at).toLocaleString()}
                           </p>
                         </div>
@@ -1765,9 +1843,13 @@ export default function AdminPage() {
           <UsersAdminPanel />
           ) : null}
 
+          {activeSection === "schedule" ? (
+          <ScheduleAdminLinks />
+          ) : null}
+
           {activeSection === "pricing" ? (
           <>
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Base Pane Pricing</CardTitle>
               <CardDescription>Per pane pricing for each window type.</CardDescription>
@@ -1782,7 +1864,7 @@ export default function AdminPage() {
                       <span className="text-sm font-semibold">{row.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor={`pane-${row.id}`} className="text-xs text-slate-400">
+                      <Label htmlFor={`pane-${row.id}`} className="text-xs text-slate-600">
                         Price
                       </Label>
                       <Input
@@ -1801,7 +1883,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Story Surcharge</CardTitle>
               <CardDescription>Applied per window when above 2nd floor.</CardDescription>
@@ -1813,7 +1895,7 @@ export default function AdminPage() {
                   <span className="text-sm font-semibold">{storyLabel}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="story-surcharge" className="text-xs text-slate-400">
+                  <Label htmlFor="story-surcharge" className="text-xs text-slate-600">
                     Price
                   </Label>
                   <Input
@@ -1838,7 +1920,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Job Minimum</CardTitle>
               <CardDescription>Floor applied if totals fall below the minimum.</CardDescription>
@@ -1850,7 +1932,7 @@ export default function AdminPage() {
                   <span className="text-sm font-semibold">Minimum charge</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="job-minimum" className="text-xs text-slate-400">
+                  <Label htmlFor="job-minimum" className="text-xs text-slate-600">
                     Price
                   </Label>
                   <Input
@@ -1869,7 +1951,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Rep Commission</CardTitle>
               <CardDescription>Percent of booked revenue paid to reps.</CardDescription>
@@ -1880,7 +1962,7 @@ export default function AdminPage() {
                   <span className="text-sm font-semibold">Commission percent</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="rep-commission" className="text-xs text-slate-400">
+                  <Label htmlFor="rep-commission" className="text-xs text-slate-600">
                     Percent
                   </Label>
                   <Input
@@ -1900,7 +1982,17 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card id="schedule-windows" className="shadow-lg border border-slate-200 bg-white text-slate-900 scroll-mt-8">
+            <CardHeader>
+              <CardTitle>Schedule Windows</CardTitle>
+              <CardDescription>Configure the visible allowed time blocks for rep and tech scheduling.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScheduleWindowSettings value={scheduleWindows} onChange={setScheduleWindows} />
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Pricing JSON</CardTitle>
               <CardDescription>Edit pricing directly as JSON.</CardDescription>
@@ -1928,7 +2020,7 @@ export default function AdminPage() {
           ) : null}
 
           {activeSection === "addons" ? (
-          <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
               <CardTitle>Add-ons</CardTitle>
               <CardDescription>Extra services priced per pane or window.</CardDescription>
@@ -1945,7 +2037,7 @@ export default function AdminPage() {
                       <span className="text-sm font-semibold">{addon.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor={`addon-${addon.id}`} className="text-xs text-slate-400">
+                      <Label htmlFor={`addon-${addon.id}`} className="text-xs text-slate-600">
                         Price
                       </Label>
                       <Input
@@ -1986,8 +2078,43 @@ export default function AdminPage() {
             </CardContent>
           </Card>
           ) : null}
+
+          <Card className="mt-8 border border-rose-200 bg-rose-50/80 text-slate-900 shadow-sm">
+            <CardHeader>
+              <CardTitle>Danger Zone</CardTitle>
+              <CardDescription>
+                Clear jobs, transactions, contacts, quotes, schedules, bookings, and reset app config defaults.
+                Users and reviews stay untouched.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {resetError ? <p className="text-sm text-destructive">{resetError}</p> : null}
+              {resetStatus ? <p className="text-sm text-slate-700">{resetStatus}</p> : null}
+              <div className="grid gap-3 md:grid-cols-[minmax(0,280px)_auto] md:items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-non-user-data">Type RESET to confirm</Label>
+                  <Input
+                    id="reset-non-user-data"
+                    value={resetConfirmation}
+                    onChange={(event) => setResetConfirmation(event.target.value)}
+                    placeholder="RESET"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleResetNonUserData}
+                  disabled={resettingData || resetConfirmation.trim() !== "RESET"}
+                >
+                  {resettingData ? "Resetting..." : "Reset Non-User Data"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
       </div>
     </div>
   );
 }
+

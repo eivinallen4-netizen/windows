@@ -49,7 +49,7 @@ const statusTone: Record<InviteStatus, string> = {
 };
 
 const darkOutlineButton =
-  "border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800 hover:text-white";
+  "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900";
 
 function formatDate(value?: string) {
   if (!value) return "None";
@@ -67,9 +67,9 @@ function displayValue(value?: string) {
 
 function DataTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-3">
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
       <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-slate-100">{value}</p>
+      <p className="mt-1 text-sm font-medium text-slate-900">{value}</p>
     </div>
   );
 }
@@ -328,14 +328,14 @@ export function UsersAdminPanel() {
   );
 
   return (
-    <Card className="shadow-lg border border-slate-800 bg-[#0f172a] text-white">
+    <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
       <CardHeader>
         <CardTitle>Users</CardTitle>
         <CardDescription>Create invite-based logins and manage account details.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {status ? <p className="text-sm text-slate-400">{status}</p> : null}
+        {status ? <p className="text-sm text-slate-600">{status}</p> : null}
 
         <div className="rounded-lg border p-4 space-y-4">
           <p className="text-sm font-semibold">Create pending user</p>
@@ -354,7 +354,7 @@ export function UsersAdminPanel() {
                 id="invite-user-role"
                 value={newUserRole}
                 onChange={(event) => setNewUserRole(event.target.value as UserRole)}
-                className="h-10 rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
+                className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
               >
                 <option value="rep">Rep</option>
                 <option value="tech">Tech</option>
@@ -382,9 +382,9 @@ export function UsersAdminPanel() {
         <div className="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
           <div className="space-y-3">
             {loading ? (
-              <p className="text-sm text-slate-400">Loading users...</p>
+              <p className="text-sm text-slate-600">Loading users...</p>
             ) : orderedUsers.length === 0 ? (
-              <p className="text-sm text-slate-400">No users yet.</p>
+              <p className="text-sm text-slate-600">No users yet.</p>
             ) : (
               orderedUsers.map((user) => (
                 <button
@@ -392,17 +392,17 @@ export function UsersAdminPanel() {
                   type="button"
                   onClick={() => setSelectedUserId(user.id)}
                   className={`w-full rounded-lg border p-4 text-left transition ${
-                    selectedUserId === user.id ? "border-sky-400 bg-slate-900" : "border-slate-800 bg-[#0f172a]"
+                    selectedUserId === user.id ? "border-sky-400 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold">{user.name || "Unnamed"}</p>
-                      <p className="text-xs text-slate-400">{user.email || "Not completed"}</p>
-                      <p className="text-xs text-slate-400">Role: {user.role}</p>
-                      <p className="text-xs text-slate-400">Created: {formatDate(user.created_at)}</p>
+                      <p className="text-xs text-slate-500">{user.email || "Not completed"}</p>
+                      <p className="text-xs text-slate-500">Role: {user.role}</p>
+                      <p className="text-xs text-slate-500">Created: {formatDate(user.created_at)}</p>
                       {user.last_signed_in_at ? (
-                        <p className="text-xs text-slate-400">Last sign-in: {formatDate(user.last_signed_in_at)}</p>
+                        <p className="text-xs text-slate-500">Last sign-in: {formatDate(user.last_signed_in_at)}</p>
                       ) : null}
                     </div>
                     <Badge className={statusTone[user.invite_status]}>{user.invite_status}</Badge>
@@ -414,22 +414,22 @@ export function UsersAdminPanel() {
 
           <div>
             {!selectedUserId ? (
-              <p className="text-sm text-slate-400">Select a user to view details.</p>
+              <p className="text-sm text-slate-600">Select a user to view details.</p>
             ) : detailsLoading || !selectedUser ? (
-              <p className="text-sm text-slate-400">Loading details...</p>
+              <p className="text-sm text-slate-600">Loading details...</p>
             ) : (
-              <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold">{selectedUser.name || "Unnamed"}</h3>
-                    <p className="text-sm text-slate-400">{selectedUser.email || "Not completed"}</p>
+                    <p className="text-sm text-slate-600">{selectedUser.email || "Not completed"}</p>
                   </div>
                   <Badge className={statusTone[selectedUser.invite_status]}>{selectedUser.invite_status}</Badge>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-[#0f172a] p-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Profile</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Profile</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -453,7 +453,7 @@ export function UsersAdminPanel() {
                           id="detail-role"
                           value={draftRole}
                           onChange={(event) => setDraftRole(event.target.value as UserRole)}
-                          className="h-10 rounded-md border border-slate-800 bg-[#0f172a] px-3 text-sm text-white"
+                          className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
                         >
                           <option value="rep">Rep</option>
                           <option value="tech">Tech</option>
@@ -510,9 +510,9 @@ export function UsersAdminPanel() {
                 <Separator />
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border border-slate-800 bg-[#0f172a] p-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Account status</p>
-                    <div className="mt-3 space-y-2 text-sm text-slate-300">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Account status</p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-700">
                       <p>Created: {formatDate(selectedUser.created_at)}</p>
                       <p>Profile completed: {formatDate(selectedUser.profile_completed_at)}</p>
                       <p>Last sign-in: {formatDate(selectedUser.last_signed_in_at)}</p>
@@ -521,9 +521,9 @@ export function UsersAdminPanel() {
                       <p>Invite used: {formatDate(selectedUser.invite_used_at)}</p>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-800 bg-[#0f172a] p-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Activity</p>
-                    <div className="mt-3 space-y-2 text-sm text-slate-300">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Activity</p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-700">
                       {"quoteCount" in activity ? (
                         <>
                           <p>Quotes: {activity.quoteCount}</p>

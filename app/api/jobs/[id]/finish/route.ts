@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import { createReviewForJob, readReviewFormData, validateReviewFormValues } from "@/lib/job-review";
+import { createReplacementAuthorizationSession, shouldOfferReplacementAuthorization } from "@/lib/job-payment-retry";
 import { findJobById, updateJob } from "@/lib/jobs";
 import { upsertTransaction } from "@/lib/transactions";
 
@@ -105,14 +106,24 @@ export async function POST(
     } catch (captureError) {
       console.error(captureError);
       const updatedJob = await findJobById(job.id);
+      const retryCheckoutUrl = shouldOfferReplacementAuthorization(captureError)
+        ? await createReplacementAuthorizationSession(request, updatedJob ?? job).catch((retryError) => {
+            console.error("Failed to create replacement checkout.", retryError);
+            return null;
+          })
+        : null;
+
       return NextResponse.json(
         {
           ok: false,
           partial: true,
-          message: "Review saved, but payment capture failed.",
+          message: retryCheckoutUrl
+            ? "Review saved, but payment capture failed. Opening a new card authorization."
+            : "Review saved, but payment capture failed.",
           reviewId: savedReview.id,
           job: updatedJob,
           paymentStatus: updatedJob?.payment_status ?? "authorized",
+          retryCheckoutUrl,
         },
         { status: 502 }
       );

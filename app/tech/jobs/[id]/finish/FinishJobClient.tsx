@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,11 +83,13 @@ function buildDefaultDraft(job: JobRecord): ReviewDraft {
 
 export default function FinishJobClient({ jobId }: { jobId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [job, setJob] = useState<JobRecord | null>(null);
   const [draft, setDraft] = useState<ReviewDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentRetryLoading, setPaymentRetryLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("Review saved and card charged.");
 
@@ -125,6 +127,76 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
       active = false;
     };
   }, [jobId]);
+
+  useEffect(() => {
+    if (searchParams.get("payment_retry_canceled") === "1") {
+      setError("Replacement card collection was canceled. Collect another card to finish payment.");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const reauthorized = searchParams.get("reauthorized");
+    if (reauthorized !== "1" || !sessionId) {
+      return;
+    }
+
+    let active = true;
+    async function finalizeReplacementCard() {
+      setPaymentRetryLoading(true);
+      setError(null);
+      try {
+        const syncResponse = await fetch("/api/stripe/session-job", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        const syncPayload = (await syncResponse.json()) as { error?: string };
+        if (!syncResponse.ok) {
+          throw new Error(syncPayload.error || "Unable to sync replacement card.");
+        }
+
+        const captureResponse = await fetch("/api/stripe/capture", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId }),
+        });
+        const capturePayload = (await captureResponse.json()) as {
+          error?: string;
+          job?: JobRecord;
+        };
+        if (!captureResponse.ok) {
+          throw new Error(capturePayload.error || "Replacement card authorized, but charge failed.");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        if (capturePayload.job) {
+          setJob(capturePayload.job);
+        }
+        setSuccessMessage("Replacement card approved and charged.");
+        setShowSuccess(true);
+        router.replace(`/tech/jobs/${jobId}/finish`);
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Unable to finish replacement payment.");
+        router.replace(`/tech/jobs/${jobId}/finish`);
+      } finally {
+        if (active) {
+          setPaymentRetryLoading(false);
+        }
+      }
+    }
+
+    void finalizeReplacementCard();
+    return () => {
+      active = false;
+    };
+  }, [jobId, router, searchParams]);
 
   useEffect(() => {
     if (!showSuccess) {
@@ -165,11 +237,16 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
         message?: string;
         error?: string;
         partial?: boolean;
+        retryCheckoutUrl?: string;
       };
 
       if (!response.ok) {
         if (payload.job) {
           setJob(payload.job);
+        }
+        if (payload.retryCheckoutUrl) {
+          window.location.href = payload.retryCheckoutUrl;
+          return;
         }
         throw new Error(payload.message || payload.error || "Unable to finish job.");
       }
@@ -183,6 +260,24 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
       setError(err instanceof Error ? err.message : "Unable to finish job.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleRetryPayment() {
+    setPaymentRetryLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/retry-payment`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || "Unable to open replacement checkout.");
+      }
+      window.location.href = payload.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to open replacement checkout.");
+      setPaymentRetryLoading(false);
     }
   }
 
@@ -218,7 +313,7 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
   }, [afterPhotoPreviewUrl, customerPhotoPreviewUrl]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(11,111,178,0.14),_transparent_34%),linear-gradient(180deg,_#f7fbff_0%,_#eef5fa_100%)]">
+    <div className="app-page-shell-soft">
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:py-12">
         <Card className="border-white/70 bg-white/90 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)]">
@@ -229,6 +324,7 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
           <CardContent className="space-y-6">
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             {loading ? <p className="text-sm text-muted-foreground">Loading job...</p> : null}
+            {paymentRetryLoading ? <p className="text-sm text-muted-foreground">Preparing payment retry...</p> : null}
 
             {job ? (
               <>
@@ -257,6 +353,12 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
                 {job.review_id ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     This job already has a saved review.
+                  </div>
+                ) : null}
+
+                {job.review_id && job.payment_status !== "captured" && job.payment_status !== "succeeded" ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    Payment is still not complete. Collect a different card to finish the charge.
                   </div>
                 ) : null}
 
@@ -407,12 +509,23 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
                     </div>
                     <div className="flex flex-wrap gap-3">
                       <Button type="button" onClick={handleSubmit} disabled={saving || !draft.houseAfterPhoto}>
-                        {saving ? "Finishing..." : "Finish Job, Save Review & Charge"}
+                      {saving ? "Finishing..." : "Finish Job, Save Review & Charge"}
                       </Button>
                       <Button type="button" variant="outline" onClick={() => router.push("/tech")} disabled={saving}>
                         Back to Jobs
                       </Button>
                     </div>
+                  </div>
+                ) : null}
+
+                {job.review_id && job.payment_status !== "captured" && job.payment_status !== "succeeded" ? (
+                  <div className="flex flex-wrap gap-3">
+                    <Button type="button" onClick={handleRetryPayment} disabled={paymentRetryLoading}>
+                      {paymentRetryLoading ? "Opening Checkout..." : "Collect New Card"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => router.push("/tech")} disabled={paymentRetryLoading}>
+                      Back to Jobs
+                    </Button>
                   </div>
                 ) : null}
               </>
@@ -424,7 +537,7 @@ export default function FinishJobClient({ jobId }: { jobId: string }) {
       {showSuccess ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4">
           <div className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 text-center shadow-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#0b6fb2]">Success</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Success</p>
             <h2 className="mt-2 text-xl font-black text-slate-900">Job finished</h2>
             <p className="mt-3 text-sm text-slate-600">{successMessage}</p>
             <Button type="button" className="mt-5" onClick={() => router.push("/tech")}>

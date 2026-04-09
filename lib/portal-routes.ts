@@ -11,6 +11,11 @@ export function getHomePathForRole(role: AppRole) {
   return "/";
 }
 
+export function getSchedulePathForRole(role: AppRole) {
+  if (role === "tech") return "/tech/schedule";
+  return "/schedule";
+}
+
 export function isAdminPortalPath(pathname: string) {
   return pathname.startsWith("/admin");
 }
