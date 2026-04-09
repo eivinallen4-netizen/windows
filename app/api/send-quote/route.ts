@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
+import { getSessionFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import type { QuoteSelections } from "@/lib/quote";
 
@@ -39,6 +40,11 @@ function escapeHtml(value: string) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSessionFromRequest(request);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     const body = (await request.json()) as {
       user?: QuoteUser;
       selections?: QuoteSelections;
@@ -64,7 +70,7 @@ export async function POST(request: Request) {
     const paneCounts = (body.selections.paneCounts ?? {}) as Record<string, number>;
     const totalWindows = Object.values(paneCounts).reduce((sum, count) => sum + count, 0);
     if (totalWindows <= 0) {
-      return NextResponse.json({ error: "Window count must be greater than 0." }, { status: 400 });
+      return NextResponse.json({ error: "Pane count must be greater than 0." }, { status: 400 });
     }
 
     const addons = Object.entries(body.selections.addons || {})
@@ -198,11 +204,11 @@ export async function POST(request: Request) {
                 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F324F;">
                   <tr>
                     <td style="padding:14px 24px;border-bottom:1px solid rgba(245,250,253,0.12);">
-                      <span style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#1B9E8A;">Windows</span><br/>
+                      <span style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#1B9E8A;">Panes</span><br/>
                       <span style="font-family: Arial, sans-serif;font-size:20px;font-weight:700;color:#F5FAFD;">${totalWindows}</span>
                     </td>
                     <td style="padding:14px 24px;border-bottom:1px solid rgba(245,250,253,0.12);border-left:1px solid rgba(245,250,253,0.12);">
-                      <span style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#1B9E8A;">Window Types</span><br/>
+                      <span style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#1B9E8A;">Pane Types</span><br/>
                       <span style="font-family: Arial, sans-serif;font-size:20px;font-weight:700;color:#F5FAFD;">${escapeHtml(breakdownText || "None")}</span>
                     </td>
                   </tr>

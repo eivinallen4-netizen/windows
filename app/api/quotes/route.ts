@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const paneCounts = (body.selections.paneCounts ?? {}) as Record<string, number>;
     const totalWindows = Object.values(paneCounts).reduce((sum, count) => sum + count, 0);
     if (totalWindows <= 0) {
-      return NextResponse.json({ error: "Window count must be greater than 0." }, { status: 400 });
+      return NextResponse.json({ error: "Pane count must be greater than 0." }, { status: 400 });
     }
 
     const pricing = await readPricing();

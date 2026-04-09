@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import LeadFunnel from "@/app/signin/LeadFunnel";
+import CustomerQuoteLanding from "./CustomerQuoteLanding";
+import { getReviews } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Request Your Quote",
 };
 
-export default function CustomerQuotePage() {
-  return <LeadFunnel />;
+export default async function CustomerQuotePage() {
+  const reviews = await getReviews();
+
+  return <CustomerQuoteLanding reviews={reviews} />;
 }

@@ -109,7 +109,7 @@ export function MySchedulePanel({ role, title, description }: MySchedulePanelPro
             <ChevronLeft className="size-4" />
             Previous
           </Button>
-          <div className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+          <div className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground">
             {formatWeekRangeLabel(weekStart)}
           </div>
           <Button type="button" variant="outline" onClick={() => startTransition(() => setWeekStart((current) => shiftWeek(current, 1)))}>
@@ -120,10 +120,10 @@ export function MySchedulePanel({ role, title, description }: MySchedulePanelPro
       </CardHeader>
       <CardContent className="space-y-4">
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {loading ? <p className="text-sm text-slate-500">Loading schedule...</p> : null}
+        {loading ? <p className="text-sm text-muted-foreground">Loading schedule...</p> : null}
         {!loading && !error && ownShifts.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-8 text-center">
-            <p className="text-sm text-slate-600">No hours scheduled for this week yet.</p>
+          <div className="rounded-2xl border border-border bg-muted/45 px-6 py-8 text-center">
+            <p className="text-sm text-muted-foreground">No hours scheduled for this week yet.</p>
           </div>
         ) : null}
         {!loading && !error && record && user && scheduleWindows ? (

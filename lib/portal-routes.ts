@@ -3,12 +3,12 @@ export type AppPortal = "admin" | "rep" | "tech";
 
 const PORTAL_ORDER: AppPortal[] = ["rep", "tech", "admin"];
 
-const REP_PORTAL_PATHS = new Set(["/", "/quote", "/close-deal", "/save-quote", "/success", "/rep-stats", "/script"]);
+const REP_PORTAL_PATHS = new Set(["/rep", "/portal-quote", "/close-deal", "/save-quote", "/success", "/rep-stats", "/script"]);
 
 export function getHomePathForRole(role: AppRole) {
   if (role === "admin") return "/admin";
   if (role === "tech") return "/tech";
-  return "/";
+  return "/rep";
 }
 
 export function getSchedulePathForRole(role: AppRole) {

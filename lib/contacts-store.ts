@@ -9,7 +9,16 @@ export type ContactRecord = {
   lastName?: string;
   phone?: string;
   address?: string;
+  paneCounts?: {
+    standard?: number;
+    specialty?: number;
+    french?: number;
+  };
   paneCount?: number;
+  windowCount?: number;
+  bestTimeToCall?: string;
+  homeType?: string;
+  serviceType?: string;
   notes?: string;
   source?: string;
   created_at: string;

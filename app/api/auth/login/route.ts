@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSessionToken, verifyPin } from "@/lib/auth";
+import { createSessionToken, SESSION_TTL_SECONDS, verifyPin } from "@/lib/auth";
 import { findUserByEmail, readUsers, writeUsers } from "@/lib/users";
 
 export const runtime = "nodejs";
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       secure: isSecureRequest(request),
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 14,
+      maxAge: SESSION_TTL_SECONDS,
     });
     return response;
   } catch (error) {

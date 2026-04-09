@@ -7,8 +7,8 @@ import {
   isTechPortalPath,
 } from "@/lib/portal-routes";
 
-const PUBLIC_PATHS = ["/signin"];
-const PUBLIC_PREFIXES = ["/_next", "/api/auth", "/setup", "/api/users/onboard"];
+const PUBLIC_PATHS = ["/", "/signin", "/customer-quote", "/reviews", "/how-it-works", "/pricing", "/before-after", "/faq", "/about"];
+const PUBLIC_PREFIXES = ["/_next", "/api/app-config", "/api/auth", "/api/contacts", "/api/files", "/setup", "/uploads", "/api/users/onboard"];
 const PUBLIC_FILES = ["/favicon.ico", "/logo.png", "/robots.txt", "/sitemap.xml"];
 
 function isPublicPath(pathname: string) {

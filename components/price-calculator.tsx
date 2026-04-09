@@ -53,7 +53,7 @@ const defaultAddonConfig: AddonConfig[] = [
   {
     id: "track",
     label: "Track Deep Cleaning",
-    description: "Remove grime from window tracks and sills.",
+    description: "Remove grime from tracks and sills.",
     price: defaultPricing.addons.track,
     free: false,
   },
@@ -104,9 +104,10 @@ type QuoteDraft = {
 type PriceCalculatorProps = {
   initialPricing?: Pricing | null;
   variant?: "dark" | "light";
+  mode?: "portal" | "lead";
 };
 
-export function PriceCalculator({ initialPricing = null, variant = "dark" }: PriceCalculatorProps) {
+export function PriceCalculator({ initialPricing = null, variant = "dark", mode = "portal" }: PriceCalculatorProps) {
   const router = useRouter();
   const [pricing, setPricing] = useState<Pricing | null>(initialPricing);
   const [pricingError, setPricingError] = useState<string | null>(null);
@@ -217,7 +218,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
 
     const totalWindows = Object.values(selections.paneCounts).reduce((sum, count) => sum + count, 0);
     if (totalWindows <= 0) {
-      setActionError("Add at least 1 window to continue.");
+      setActionError("Add at least 1 pane to continue.");
       return;
     }
 
@@ -246,58 +247,59 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
     .filter((item) => item.count > 0);
   const breakdownText = breakdownItems.length
     ? breakdownItems.map((item) => `${item.count} ${item.label}`).join(", ")
-    : "No windows yet";
+    : "No panes yet";
   const breakdownShort = breakdownItems.length
     ? breakdownItems.map((item) => `${item.count} ${item.label}`).join(" | ")
-    : "No windows";
+    : "No panes";
+  const isLeadMode = mode === "lead";
 
   const isLight = variant === "light";
   const cardClass = isLight
-    ? "w-full border border-slate-200 bg-white text-slate-900 shadow-lg"
+    ? "w-full border border-border bg-white text-card-foreground shadow-lg"
     : "w-full border border-slate-800 bg-slate-950 text-white shadow-lg";
-  const titleClass = isLight ? "text-2xl text-slate-900" : "text-2xl text-white";
-  const descClass = isLight ? "text-slate-500" : "text-slate-400";
+  const titleClass = isLight ? "text-2xl text-foreground" : "text-2xl text-white";
+  const descClass = isLight ? "text-muted-foreground" : "text-slate-400";
   const stepTextClass = isLight
-    ? "text-xs font-semibold uppercase tracking-[0.2em] text-slate-500"
+    ? "text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
     : "text-xs font-semibold uppercase tracking-[0.2em] text-slate-400";
-  const labelClass = isLight ? "text-base font-semibold text-slate-900" : "text-base font-semibold text-white";
+  const labelClass = isLight ? "text-base font-semibold text-foreground" : "text-base font-semibold text-white";
   const stepperButtonClass = isLight
-    ? "h-12 w-12 rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+    ? "h-12 w-12 rounded-xl border border-border bg-white text-foreground hover:bg-accent"
     : "h-12 w-12 rounded-xl border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
   const stepperValueClass = isLight
-    ? "h-12 w-20 rounded-xl border border-slate-200 bg-white text-center text-lg font-semibold text-slate-900"
+    ? "h-12 w-20 rounded-xl border border-border bg-white text-center text-lg font-semibold text-foreground"
     : "h-12 w-20 rounded-xl border border-slate-800 bg-slate-950 text-center text-lg font-semibold text-white";
   const optionActiveClass = isLight
-    ? "h-auto justify-between rounded-2xl border border-primary bg-primary/8 px-4 py-4 text-left text-slate-900 shadow-sm"
+    ? "h-auto justify-between rounded-2xl border border-primary bg-primary/8 px-4 py-4 text-left text-foreground shadow-sm"
     : "h-auto justify-between rounded-2xl border border-primary/35 bg-primary/15 px-4 py-4 text-left text-white shadow-sm";
   const optionInactiveClass = isLight
-    ? "h-auto justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left text-slate-900 shadow-sm hover:bg-slate-50"
+    ? "h-auto justify-between rounded-2xl border border-border bg-white px-4 py-4 text-left text-foreground shadow-sm hover:bg-accent/40"
     : "h-auto justify-between rounded-2xl border border-slate-800 bg-slate-950 px-4 py-4 text-left text-white shadow-sm hover:bg-slate-900";
-  const subMutedClass = isLight ? "text-slate-500" : "text-slate-400";
+  const subMutedClass = isLight ? "text-muted-foreground" : "text-slate-400";
   const addonCardBase = isLight
-    ? "border border-slate-200 bg-white shadow-sm"
+    ? "border border-border bg-white shadow-sm"
     : "border border-slate-800 bg-slate-950 shadow-sm";
   const addonIncluded = isLight
     ? "border-primary bg-primary/8"
     : "border-primary/35 bg-primary/15";
   const addonSelected = isLight
-    ? "border-slate-300 bg-slate-50"
+    ? "border-border bg-accent/45"
     : "border-slate-700 bg-slate-900";
   const badgeIncluded = isLight
     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
     : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300";
   const badgeSelected = isLight
-    ? "border-slate-200 bg-white text-slate-600"
+    ? "border-border bg-white text-muted-foreground"
     : "border-slate-700 bg-slate-900 text-slate-200";
-  const badgeOptional = isLight ? "border-slate-200 text-slate-600" : "border-slate-700 text-slate-300";
+  const badgeOptional = isLight ? "border-border text-muted-foreground" : "border-slate-700 text-slate-300";
   const primaryButton = isLight
     ? "h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90"
     : "h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90";
   const secondaryButton = isLight
-    ? "h-12 text-base border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+    ? "h-12 text-base border border-border bg-white text-foreground hover:bg-accent"
     : "h-12 text-base border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
   const outlineButton = isLight
-    ? "h-12 w-full text-base border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+    ? "h-12 w-full text-base border border-border bg-white text-foreground hover:bg-accent"
     : "h-12 w-full text-base border border-slate-800 bg-slate-950 text-white hover:bg-slate-900";
   const summaryCard = "rounded-xl bg-primary text-primary-foreground";
 
@@ -306,7 +308,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
       <CardHeader>
         <CardTitle className={titleClass}>Job Details</CardTitle>
         <CardDescription className={descClass}>
-          Tell us about the windows. Your estimate updates instantly.
+          Tell us about the panes. Your estimate updates instantly.
         </CardDescription>
       </CardHeader>
 
@@ -317,9 +319,9 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
           ) : null}
           <div className="space-y-4">
             <p className={stepTextClass}>Step 1</p>
-            <h3 className="text-xl font-semibold text-slate-900">Job Details</h3>
+            <h3 className="text-xl font-semibold text-foreground">Job Details</h3>
             <div className="space-y-3">
-              <Label className={labelClass}>Window Types</Label>
+              <Label className={labelClass}>Pane Types</Label>
               <div className="grid gap-3">
                 {paneTypeOptions.map((option) => {
                   const Icon = option.icon;
@@ -336,7 +338,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                         <div>
                           <p className="text-sm font-semibold">{option.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            ${activePricing.paneTypes[option.id].toFixed(2)} / window
+                            ${activePricing.paneTypes[option.id].toFixed(2)} / pane
                           </p>
                         </div>
                       </div>
@@ -407,7 +409,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
 
           <div className="space-y-3">
             <p className={stepTextClass}>Step 2</p>
-            <h3 className="text-xl font-semibold text-slate-900">Optional Add-ons</h3>
+            <h3 className="text-xl font-semibold text-foreground">Optional Add-ons</h3>
             <div className="grid gap-3">
               {addonsConfig.map((option) => {
                 const Icon = addonIcons[option.id];
@@ -428,7 +430,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                           <p className="text-sm font-semibold">{option.label}</p>
                           <p className={`text-xs ${subMutedClass}`}>{option.description}</p>
                           <p className="mt-2 text-xs font-semibold text-primary">
-                            {included ? "Included" : addonRate === 0 ? "Free" : `+ $${addonRate.toFixed(2)} / window`}
+                            {included ? "Included" : addonRate === 0 ? "Free" : `+ $${addonRate.toFixed(2)} / pane`}
                           </p>
                         </div>
                       </div>
@@ -450,7 +452,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                           type="button"
                           size="icon"
                           variant="outline"
-                          className="h-9 w-9 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          className="h-9 w-9 rounded-full border border-border bg-white text-muted-foreground hover:bg-accent"
                           onClick={() => updateAddon(option.id)}
                           disabled={included}
                           aria-label={active ? "Remove add-on" : "Add add-on"}
@@ -465,17 +467,17 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
             </div>
           </div>
 
-          <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:hidden">
+          <Card className="rounded-2xl border border-border bg-white shadow-sm lg:hidden">
             <CardHeader className="pb-3 text-center">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Estimated Total</p>
-              <CardTitle className="text-3xl font-black text-slate-900">${totals.total.toLocaleString()}</CardTitle>
+              <CardTitle className="text-3xl font-black text-foreground">${totals.total.toLocaleString()}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {breakdownItems.length ? (
                 breakdownItems.map((item) => {
                   const lineTotal = item.count * activePricing.paneTypes[item.id];
                   return (
-                    <div key={item.id} className="flex items-center justify-between border-t pt-3 text-slate-600">
+                    <div key={item.id} className="flex items-center justify-between border-t pt-3 text-muted-foreground">
                       <span>
                         {item.count} x {item.label}
                       </span>
@@ -484,12 +486,12 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                   );
                 })
               ) : (
-                <div className="flex items-center justify-between border-t pt-3 text-slate-600">
-                  <span>No windows yet</span>
+                <div className="flex items-center justify-between border-t pt-3 text-muted-foreground">
+                  <span>No panes yet</span>
                   <span>$0.00</span>
                 </div>
               )}
-              <div className="flex items-center justify-between text-slate-600">
+              <div className="flex items-center justify-between text-muted-foreground">
                 <span>{storyLabel}</span>
                 <span>{totals.storySurcharge ? `$${totals.storySurcharge.toFixed(2)}` : "-"}</span>
               </div>
@@ -500,12 +502,12 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                   const normalAddonPrice = option.price;
                   const isFree = addonTotal === 0;
                   return (
-                    <div key={option.id} className="flex items-center justify-between text-slate-600">
+                    <div key={option.id} className="flex items-center justify-between text-muted-foreground">
                       <span>{option.label}</span>
                       <span className="flex items-center gap-2">
                         <span>{isFree ? "Free" : `$${addonTotal.toFixed(2)}`}</span>
                         {isFree && normalAddonPrice > 0 ? (
-                          <span className="text-xs text-slate-400">${normalAddonPrice.toFixed(2)}</span>
+                          <span className="text-xs text-muted-foreground">${normalAddonPrice.toFixed(2)}</span>
                         ) : null}
                       </span>
                     </div>
@@ -523,28 +525,43 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
           </Card>
 
           <div className="hidden space-y-3 sm:block">
-            <div className="grid gap-3 sm:grid-rows-2">
-              <Button
-                type="button"
-                size="lg"
-                variant="secondary"
-                className={secondaryButton}
-                onClick={() => persistDraft("/save-quote")}
-              >
-                Save This Quote
-              </Button>
+            {isLeadMode ? (
               <Button
                 type="button"
                 size="lg"
                 className={primaryButton}
-                onClick={() => persistDraft("/close-deal")}
+                onClick={() => router.push("/#quote-form")}
               >
-                Continue to Booking
+                Request a Call
               </Button>
-            </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-rows-2">
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="secondary"
+                  className={secondaryButton}
+                  onClick={() => persistDraft("/save-quote")}
+                >
+                  Save This Quote
+                </Button>
+                <Button
+                  type="button"
+                  size="lg"
+                  className={primaryButton}
+                  onClick={() => persistDraft("/close-deal")}
+                >
+                  Continue to Booking
+                </Button>
+              </div>
+            )}
 
             {actionError ? (
               <p className={`text-sm ${isLight ? "text-rose-600" : "text-rose-400"}`}>{actionError}</p>
+            ) : null}
+
+            {isLeadMode ? (
+              <p className={`text-sm ${subMutedClass}`}>Use this estimate as a starting point. We confirm exact pricing by phone before scheduling.</p>
             ) : null}
 
             <Button type="button" variant="outline" className={outlineButton} onClick={resetAll}>
@@ -568,7 +585,7 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
 
             <Card className={isLight ? "border-slate-200" : "border-slate-800 bg-slate-950"}>
               <CardHeader className="pb-3">
-                <CardTitle className={isLight ? "text-lg text-slate-900" : "text-lg text-white"}>
+                <CardTitle className={isLight ? "text-lg text-foreground" : "text-lg text-white"}>
                   Quote summary
                 </CardTitle>
                 <CardDescription className={descClass}>Everything included in this estimate.</CardDescription>
@@ -605,23 +622,23 @@ export function PriceCalculator({ initialPricing = null, variant = "dark" }: Pri
                 {breakdownShort}
               </p>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-10"
-              onClick={() => persistDraft("/save-quote")}
-            >
-              Save
-            </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-10"
+            onClick={isLeadMode ? resetAll : () => persistDraft("/save-quote")}
+          >
+            {isLeadMode ? "Reset" : "Save"}
+          </Button>
           </div>
           <Button
             type="button"
             size="lg"
             className={primaryButton}
-            onClick={() => persistDraft("/close-deal")}
+            onClick={isLeadMode ? () => router.push("/#quote-form") : () => persistDraft("/close-deal")}
           >
-            Continue
+            {isLeadMode ? "Request a Call" : "Continue"}
           </Button>
         </div>
       </div>

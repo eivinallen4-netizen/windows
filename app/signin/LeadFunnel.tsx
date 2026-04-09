@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, Home, PhoneCall, Shield, Sparkles, Star } from "lucide-react";
+import { CheckCircle2, Home, PhoneCall, Shield, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -254,25 +253,14 @@ export default function LeadFunnel() {
                   </p>
                 ) : null}
 
-                <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <div className="flex flex-col gap-3 pt-2">
                   <Button
                     type="submit"
                     size="lg"
-                    className="h-12 flex-1 rounded-full bg-[#f6bd60] px-6 text-slate-950 hover:bg-[#f3c777]"
+                    className="h-12 rounded-full bg-[#f6bd60] px-6 text-slate-950 hover:bg-[#f3c777]"
                     disabled={loading}
                   >
                     {loading ? "Sending request..." : "Request my callback"}
-                  </Button>
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="outline"
-                    className="h-12 rounded-full border-white/15 bg-white/5 px-6 text-white hover:bg-white/10 hover:text-white"
-                  >
-                    <Link href="/quote">
-                      Prefer to count your windows yourself?
-                      <ArrowRight className="size-4" />
-                    </Link>
                   </Button>
                 </div>
               </form>

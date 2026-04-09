@@ -303,7 +303,7 @@ export default function SaveQuotePage() {
     const resolvedAddress = user.address.trim() || "Auto-Blob";
 
     if (totalWindows <= 0) {
-      setError("Window count must be greater than 0.");
+      setError("Pane count must be greater than 0.");
       return;
     }
 
@@ -445,7 +445,7 @@ export default function SaveQuotePage() {
               <p className="text-sm font-semibold">Everything in your quote</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg bg-muted/40 p-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Windows</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Panes</p>
                   <p className="mt-2 text-2xl font-semibold">{totalWindows}</p>
                   <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                     {breakdownItems.length ? (
@@ -455,7 +455,7 @@ export default function SaveQuotePage() {
                         </p>
                       ))
                     ) : (
-                      <p>No windows selected.</p>
+                      <p>No panes selected.</p>
                     )}
                   </div>
                 </div>

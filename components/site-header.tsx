@@ -123,12 +123,14 @@ export function SiteHeader() {
     }
   }
 
+  const homeHref = user ? getHomePathForRole(user.role) : "/";
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="flex items-center justify-between gap-4 py-3">
           <Link
-            href="/"
+            href={homeHref}
             className="group flex min-w-0 items-center gap-3 rounded-2xl transition-colors hover:text-primary"
             aria-label="Go to homepage"
           >

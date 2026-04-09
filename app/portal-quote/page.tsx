@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function InternalQuoteAliasPage() {
+export default function LegacyPortalQuotePage() {
   redirect("/rep");
 }

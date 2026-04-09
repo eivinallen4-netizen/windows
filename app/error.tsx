@@ -30,10 +30,10 @@ export default function ErrorPage({
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
                 Something Broke
               </p>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                 The page hit an error, but the app stayed up.
               </h1>
-              <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+              <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
                 Try the action again or reset this screen. The error was caught so the rest of the app
                 does not crash out.
               </p>
@@ -48,7 +48,7 @@ export default function ErrorPage({
               </Button>
             </div>
             {error.digest ? (
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Error digest: {error.digest}
               </p>
             ) : null}

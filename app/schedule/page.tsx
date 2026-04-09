@@ -19,10 +19,10 @@ export default function RepSchedulePage() {
                 Rep Schedule
               </span>
               <div className="space-y-3">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                   See your knocking week at a glance.
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                   This view is read-only and only shows your assigned rep schedule for the selected week.
                 </p>
               </div>

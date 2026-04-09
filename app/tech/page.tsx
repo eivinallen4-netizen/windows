@@ -160,10 +160,10 @@ export default function TechPage() {
                 Tech Portal
               </span>
               <div className="space-y-2">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                   {activeJobs.length === 0 ? "Queue clear." : "Focus on the next house."}
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                   Completed jobs fall out of the active queue. Your score stays up top so the page feels like progress, not paperwork.
                 </p>
               </div>
@@ -175,10 +175,10 @@ export default function TechPage() {
                 <p className="mt-3 text-5xl font-black tracking-tight">{score.totalPanes}</p>
                 <p className="mt-2 text-sm text-white/70">{score.title}</p>
               </div>
-              <div className="rounded-[1.5rem] bg-white px-5 py-5 text-slate-900 shadow-xl ring-1 ring-slate-200/80">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Completed Houses</p>
+              <div className="rounded-[1.5rem] bg-white px-5 py-5 text-foreground shadow-xl ring-1 ring-border/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Completed Houses</p>
                 <p className="mt-3 text-4xl font-black tracking-tight">{score.totalHouses}</p>
-                <p className="mt-2 text-sm text-slate-500">{formatHours(score.totalHours)} total hours on the clock</p>
+                <p className="mt-2 text-sm text-muted-foreground">{formatHours(score.totalHours)} total hours on the clock</p>
               </div>
             </div>
           </div>
@@ -187,29 +187,29 @@ export default function TechPage() {
         <section className="mb-6 grid gap-4 md:grid-cols-4">
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
             <CardContent className="px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Panes</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Panes</p>
               <p className="mt-3 text-4xl font-black tracking-tight text-primary">{score.totalPanes}</p>
             </CardContent>
           </Card>
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
             <CardContent className="px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Houses Done</p>
-              <p className="mt-3 text-4xl font-black tracking-tight text-slate-900">{score.totalHouses}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Houses Done</p>
+              <p className="mt-3 text-4xl font-black tracking-tight text-foreground">{score.totalHouses}</p>
             </CardContent>
           </Card>
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
             <CardContent className="px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Hours Worked</p>
-              <p className="mt-3 text-4xl font-black tracking-tight text-slate-900">{formatHours(score.totalHours)}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Hours Worked</p>
+              <p className="mt-3 text-4xl font-black tracking-tight text-foreground">{formatHours(score.totalHours)}</p>
             </CardContent>
           </Card>
           <Card className="border-white/70 bg-white/90 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)]">
             <CardContent className="px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pace</p>
-              <p className="mt-3 text-3xl font-black tracking-tight text-slate-900">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pace</p>
+              <p className="mt-3 text-3xl font-black tracking-tight text-foreground">
                 {score.panesPerHour ? `${score.panesPerHour.toFixed(1)} panes/hr` : "No pace yet"}
               </p>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {score.hoursPerPane ? `${score.hoursPerPane.toFixed(2)} hrs per pane` : "Finish jobs to build your score"}
               </p>
             </CardContent>
@@ -228,10 +228,10 @@ export default function TechPage() {
             {loading ? <p className="text-sm text-muted-foreground">Loading jobs...</p> : null}
 
             {activeJobs.length === 0 && !loading ? (
-              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 px-6 py-8 text-center">
+              <div className="rounded-[1.5rem] border border-border bg-muted/45 px-6 py-8 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">All Clear</p>
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">No active jobs left.</h2>
-                <p className="mt-3 text-sm text-slate-600">
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-foreground">No active jobs left.</h2>
+                <p className="mt-3 text-sm text-muted-foreground">
                   You finished the queue. Pane score, houses done, and pace are still tracked above.
                 </p>
               </div>
@@ -243,22 +243,22 @@ export default function TechPage() {
                   const finishDisabled = !job.started_at;
 
                   return (
-                    <Card key={job.id} className="overflow-hidden border border-slate-200 shadow-sm">
-                      <CardHeader className="gap-4 bg-slate-50/80">
+                    <Card key={job.id} className="overflow-hidden border border-border shadow-sm">
+                      <CardHeader className="gap-4 bg-muted/45">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-2">
-                            <CardTitle className="text-lg text-slate-900">
+                            <CardTitle className="text-lg text-foreground">
                               {job.customer?.name || "Customer"}
                             </CardTitle>
-                            <div className="space-y-1 text-sm text-slate-600">
+                            <div className="space-y-1 text-sm text-muted-foreground">
                               <p>{formatSchedule(job)}</p>
                               <p>{job.customer?.address || "Address not set"}</p>
                               <p>{job.pane_total ? `${job.pane_total} panes` : "Pane count not recorded"}</p>
-                              {paneBreakdown ? <p className="text-xs text-slate-500">{paneBreakdown}</p> : null}
+                              {paneBreakdown ? <p className="text-xs text-muted-foreground">{paneBreakdown}</p> : null}
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                            <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-foreground">
                               {jobStatus}
                             </span>
                             <span className="rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">

@@ -28,10 +28,10 @@ export default function GlobalError({
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
                   Global Error
                 </p>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                   A fatal error was caught before the app could white-screen.
                 </h1>
-                <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+                <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
                   Reload this screen to retry. If it keeps happening, the error is now at least trapped in
                   a controlled fallback instead of crashing the entire app shell.
                 </p>
@@ -46,13 +46,13 @@ export default function GlobalError({
                 </button>
                 <Link
                   href="/"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground transition hover:bg-accent"
                 >
                   Go Home
                 </Link>
               </div>
               {error.digest ? (
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                   Error digest: {error.digest}
                 </p>
               ) : null}

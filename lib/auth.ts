@@ -1,6 +1,7 @@
 const SESSION_COOKIE = "pb_session";
 const ROLE_OVERRIDE_COOKIE = "pb_role_override";
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+export const SESSION_TTL_MS = 1000 * 60 * 60 * 3;
+export const SESSION_TTL_SECONDS = 60 * 60 * 3;
 
 export type AppAuthRole = "admin" | "rep" | "tech";
 

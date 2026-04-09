@@ -50,7 +50,9 @@ export default function SignInForm({ nextPath }: SignInFormProps) {
           Secure Access
         </div>
         <CardTitle className="text-2xl">Sign in</CardTitle>
-        <CardDescription className="text-sm leading-6">Use your email and PIN to access PureBin tools.</CardDescription>
+        <CardDescription className="text-sm leading-6 text-muted-foreground">
+          Use your email and PIN to access PureBin tools.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -81,7 +83,7 @@ export default function SignInForm({ nextPath }: SignInFormProps) {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-11 w-full" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </CardContent>

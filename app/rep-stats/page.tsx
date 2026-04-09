@@ -19,10 +19,10 @@ export default function RepStatsPage() {
                 Rep Stats
               </span>
               <div className="space-y-3">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                   Track your board and see the team race live.
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                   Closed jobs, panes sold, close rate, and team rank all live here now, away from the quote page.
                 </p>
               </div>
