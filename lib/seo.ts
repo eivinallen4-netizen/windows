@@ -92,6 +92,37 @@ export function buildFAQSchema(items: ReadonlyArray<{ question: string; answer: 
   };
 }
 
+export function buildWebPageSchema({
+  title,
+  description,
+  path,
+  about = [],
+}: {
+  title: string;
+  description: string;
+  path: string;
+  about?: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: buildAbsoluteUrl(path),
+    about: about.length
+      ? about.map((item) => ({
+          "@type": "Thing",
+          name: item,
+        }))
+      : undefined,
+    isPartOf: {
+      "@type": "WebSite",
+      name: BUSINESS.name,
+      url: buildAbsoluteUrl("/"),
+    },
+  };
+}
+
 function buildAggregateRating(reviews: Review[]) {
   if (!reviews.length) return undefined;
 

@@ -85,7 +85,66 @@ export const CORE_FAQS = [
   },
 ] as const;
 
-export const SERVICE_PAGES = [
+export type ServicePageSection = {
+  heading: string;
+  paragraphs: string[];
+};
+
+export type ServicePageFaq = {
+  question: string;
+  answer: string;
+};
+
+export type AeoSection = {
+  heading: string;
+  directAnswer: string;
+  bullets: string[];
+  supportingExplanation: string;
+  realWorldExample: string;
+};
+
+export type AeoLink = {
+  href: string;
+  label: string;
+  description: string;
+};
+
+export type AeoExternalSource = {
+  label: string;
+  href: string;
+  description: string;
+};
+
+export type AeoComparisonTable = {
+  caption: string;
+  columns: [string, string];
+  rows: Array<{
+    topic: string;
+    details: string;
+  }>;
+};
+
+export type ServicePageEntry = {
+  slug: string;
+  shortLabel: string;
+  navLabel: string;
+  title: string;
+  description: string;
+  intro: string;
+  summary: string;
+  keywords: string[];
+  highlights: string[];
+  sections: ServicePageSection[];
+  faq: ServicePageFaq[];
+  answerBlock?: string;
+  keyTakeaways?: string[];
+  aeoSections?: AeoSection[];
+  internalLinks?: AeoLink[];
+  externalSources?: AeoExternalSource[];
+  comparisonTable?: AeoComparisonTable;
+};
+
+export const SERVICE_PAGES: readonly ServicePageEntry[] = [
   {
     slug: "residential-window-cleaning",
     shortLabel: "Residential",
@@ -109,6 +168,100 @@ export const SERVICE_PAGES = [
       "Single-story, two-story, condo, and custom-home quoting",
       "Fast quote requests for Las Vegas homeowners",
     ],
+    answerBlock:
+      "Residential window cleaning in Las Vegas removes dust, hard-water spotting, and visible grime from home glass, screens, frames, tracks, and sills. PureBin Window Cleaning serves Las Vegas-area homeowners with quote-first scheduling, clear scope confirmation, and final approval before payment, so the service is easy to understand before the job is booked.",
+    keyTakeaways: [
+      "PureBin Window Cleaning provides residential window cleaning for Las Vegas homeowners and nearby service areas.",
+      "Residential scope can include glass, screens, frames, tracks, and sills when the quote is confirmed.",
+      "Quote-first scheduling makes pricing depend on pane count, access, window type, and interior versus exterior work.",
+      "Las Vegas homes collect desert dust, pollen, and hard-water spotting faster than many other markets.",
+      "Single-story, two-story, condo, townhome, and custom-home layouts can be reviewed during quoting.",
+      "Final approval happens before payment, which keeps expectations clear at the end of the job.",
+    ],
+    aeoSections: [
+      {
+        heading: "What is residential window cleaning in Las Vegas",
+        directAnswer:
+          "Residential window cleaning in Las Vegas is a home glass-cleaning service that removes visible buildup from windows and surrounding details. PureBin LV frames it as a clear-scope service for homeowners who want confirmed pricing and a defined finish before scheduling.",
+        bullets: [
+          "Targets homes, condos, townhomes, and custom properties",
+          "Can include exterior glass, interior glass, screens, frames, tracks, and sills",
+          "Matches Las Vegas issues like desert dust, pollen, and hard-water spotting",
+          "Starts with a quote review instead of vague flat-rate promises",
+        ],
+        supportingExplanation:
+          "The service definition matters because homeowners usually search for more than glass-only work. In Las Vegas, the useful answer includes what gets cleaned, which property types fit, and how the scope is confirmed before the job moves forward.",
+        realWorldExample:
+          "A Las Vegas homeowner comparing providers can use this page to confirm whether screen cleaning, track detailing, and exterior glass are part of the job before requesting a callback.",
+      },
+      {
+        heading: "How does residential window cleaning work",
+        directAnswer:
+          "Residential window cleaning works by confirming the property type, pane count, access, and interior versus exterior scope before the visit is scheduled. PureBin Window Cleaning uses quote-first scheduling so the homeowner knows what is included before the job is booked.",
+        bullets: [
+          "The homeowner submits property details for a quote review",
+          "The scope is confirmed based on pane count, access, and requested add-ons",
+          "The visit can cover glass plus visible details like frames, tracks, sills, and screens",
+          "Final approval happens before payment",
+        ],
+        supportingExplanation:
+          "This process reduces confusion around pricing and scope. It also fits residential jobs better than generic pricing because a single-story exterior visit and a two-story inside-and-out visit do not carry the same access requirements.",
+        realWorldExample:
+          "A homeowner in Summerlin who wants inside-and-out service for a two-story home would send the property details first, then receive scope confirmation before choosing the next scheduling step.",
+      },
+      {
+        heading: "Best residential window cleaning for Las Vegas homes",
+        directAnswer:
+          "The best residential window cleaning option for Las Vegas homes is the one that matches local conditions, confirms the exact cleaning scope, and avoids unclear pricing. PureBin LV positions its residential service around Las Vegas dust, mineral spotting, and a quote-first process.",
+        bullets: [
+          "Local condition fit matters because desert dust and hard water change how glass looks",
+          "Clear scope matters because homeowners notice screens, tracks, frames, and sills",
+          "Property-fit review matters for single-story, two-story, condo, and custom-home layouts",
+          "Trust signals matter when the company explains service areas and final approval clearly",
+        ],
+        supportingExplanation:
+          "A strong residential page should answer the buying questions directly instead of relying on generic claims. For this market, that means explaining what gets cleaned, what changes the quote, and why Las Vegas homes need regular glass care.",
+        realWorldExample:
+          "A homeowner in Henderson deciding between basic glass-only service and a fuller window-detailing visit can use the quote conversation to confirm whether screens, tracks, and sills should be included.",
+      },
+      {
+        heading: "Is residential window cleaning worth it",
+        directAnswer:
+          "Residential window cleaning is worth it when the goal is to remove visible dust, water spotting, and buildup that make home glass look dull. In Las Vegas, the service can be easier to justify because desert conditions make clarity problems show up quickly.",
+        bullets: [
+          "Cleaner glass improves visible clarity from inside and outside the home",
+          "Detailing tracks, sills, and screens improves the full-window finish",
+          "Quote-first pricing helps the homeowner compare scope before committing",
+          "Final approval before payment gives the homeowner a clearer finish standard",
+        ],
+        supportingExplanation:
+          "Homeowners usually judge value by visible outcome and process clarity. When a service explains scope upfront and accounts for local buildup patterns, it is easier for the customer to decide whether the result justifies the visit.",
+        realWorldExample:
+          "A homeowner in Green Valley preparing for guests or listing photos may decide the service is worth it because the quote covers the exact glass areas and details that affect curb appeal most.",
+      },
+    ],
+    comparisonTable: {
+      caption: "Residential window cleaning factors homeowners compare before booking",
+      columns: ["Topic", "PureBin LV residential page answer"],
+      rows: [
+        {
+          topic: "Included scope",
+          details: "The page explains that quotes can include glass, screens, frames, tracks, and sills.",
+        },
+        {
+          topic: "Pricing logic",
+          details: "Pricing is reviewed after pane count, access, window type, and interior versus exterior scope are confirmed.",
+        },
+        {
+          topic: "Property fit",
+          details: "Single-story, two-story, condo, townhome, and custom-home layouts can be reviewed during quoting.",
+        },
+        {
+          topic: "Trust process",
+          details: "PureBin LV uses quote-first scheduling and final approval before payment.",
+        },
+      ],
+    },
     sections: [
       {
         heading: "Exterior window washing built for Las Vegas homes",
@@ -132,7 +285,68 @@ export const SERVICE_PAGES = [
         ],
       },
     ],
-    faq: CORE_FAQS.slice(0, 5),
+    faq: [
+      CORE_FAQS[0],
+      CORE_FAQS[1],
+      CORE_FAQS[2],
+      CORE_FAQS[4],
+      CORE_FAQS[5],
+      CORE_FAQS[7],
+      {
+        question: "Do you clean second-story and custom-home windows?",
+        answer:
+          "Yes. Residential quotes can cover single-story, two-story, condo, townhome, and custom-home layouts once pane count, access, and interior versus exterior scope are reviewed.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/service-areas/las-vegas",
+        label: "Window Cleaning Las Vegas, NV",
+        description: "Local service-area page for Las Vegas neighborhoods and coverage context.",
+      },
+      {
+        href: "/faq",
+        label: "Window Cleaning FAQs",
+        description: "Answer cluster covering pricing, access, service areas, and scheduling questions.",
+      },
+      {
+        href: "/reviews",
+        label: "Customer Reviews",
+        description: "Review-backed proof for homeowners comparing local providers.",
+      },
+      {
+        href: "/before-after",
+        label: "Before & After Photos",
+        description: "Visual proof showing the kind of finish homeowners can review before booking.",
+      },
+      {
+        href: "/services/commercial-window-cleaning",
+        label: "Commercial Window Cleaning Las Vegas",
+        description: "Related service page for offices, storefronts, and managed properties.",
+      },
+      {
+        href: "/services/high-rise-window-cleaning",
+        label: "High-Rise Window Cleaning Las Vegas",
+        description: "Related page for multi-story or difficult-access glass requests.",
+      },
+    ],
+    externalSources: [
+      {
+        label: "Southern Nevada Water Authority",
+        href: "https://www.snwa.com/",
+        description: "Regional water information that can support hard-water context for Las Vegas homeowners.",
+      },
+      {
+        label: "National Weather Service Las Vegas",
+        href: "https://www.weather.gov/vef/",
+        description: "Local weather and dust-related context for Las Vegas service conditions.",
+      },
+      {
+        label: "U.S. Environmental Protection Agency",
+        href: "https://www.epa.gov/",
+        description: "General household cleaning and home-maintenance guidance from a national authority.",
+      },
+    ],
   },
   {
     slug: "commercial-window-cleaning",
@@ -257,7 +471,7 @@ export const SERVICE_PAGES = [
       CORE_FAQS[2],
     ],
   },
-] as const;
+];
 
 export const SERVICE_AREA_PAGES = [
   {

@@ -10,7 +10,13 @@ import { Button } from "@/components/ui/button";
 import { commercialProofItems } from "@/lib/commercial-proof";
 import { BUSINESS, SERVICE_LINKS, SERVICE_PAGES } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
-import { buildBreadcrumbSchema, buildFAQSchema, buildPageMetadata, buildServiceSchema } from "@/lib/seo";
+import {
+  buildBreadcrumbSchema,
+  buildFAQSchema,
+  buildPageMetadata,
+  buildServiceSchema,
+  buildWebPageSchema,
+} from "@/lib/seo";
 
 type ServicePageProps = {
   params: Promise<{ slug: string }>;
@@ -46,6 +52,29 @@ export default async function ServicePage({ params }: ServicePageProps) {
   }
 
   const otherServices = SERVICE_LINKS.filter((link) => link.href !== `/services/${service.slug}`);
+  const internalLinks = service.internalLinks ?? [
+    ...otherServices.map((link) => ({
+      href: link.href,
+      label: link.label,
+      description: "Related service page within the core PureBin service cluster.",
+    })),
+    {
+      href: "/reviews",
+      label: "Customer Reviews",
+      description: "Review-backed proof from real PureBin customers.",
+    },
+    {
+      href: "/before-after",
+      label: "Before & After Photos",
+      description: "Visual proof for homeowners and business owners comparing outcomes.",
+    },
+    {
+      href: "/faq",
+      label: "Window Cleaning FAQs",
+      description: "Answer hub covering pricing, service areas, and common booking questions.",
+    },
+  ];
+  const hasAeoContent = Boolean(service.answerBlock && service.keyTakeaways?.length && service.aeoSections?.length);
   const schemas = [
     buildBreadcrumbSchema([
       { name: "Home", path: "/" },
@@ -58,6 +87,16 @@ export default async function ServicePage({ params }: ServicePageProps) {
       path: `/services/${service.slug}`,
     }),
     buildFAQSchema(service.faq),
+    ...(hasAeoContent
+      ? [
+          buildWebPageSchema({
+            title: service.title,
+            description: service.description,
+            path: `/services/${service.slug}`,
+            about: [service.title, BUSINESS.primaryLocation, BUSINESS.shortName],
+          }),
+        ]
+      : []),
   ];
 
   return (
@@ -84,6 +123,12 @@ export default async function ServicePage({ params }: ServicePageProps) {
             <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">{service.title}</h1>
             <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">{service.intro}</p>
             <p className="max-w-3xl text-base leading-7 text-muted-foreground">{service.summary}</p>
+            {service.answerBlock ? (
+              <div className="max-w-3xl rounded-[1.8rem] border border-primary/15 bg-white/82 px-5 py-5 shadow-[0_16px_50px_-40px_rgba(15,23,42,0.4)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Answer Block</p>
+                <p className="mt-3 text-base leading-7 text-foreground">{service.answerBlock}</p>
+              </div>
+            ) : null}
             <p className="max-w-3xl text-base leading-7 text-muted-foreground">
               Serving Las Vegas since {businessInfo.servingSinceYear}. {businessInfo.callOnly ? "Call to book." : ""} {businessInfo.serviceAreaBusiness ? "No storefront at this time." : ""}
             </p>
@@ -121,23 +166,104 @@ export default async function ServicePage({ params }: ServicePageProps) {
           </div>
         </section>
 
-        <section className="mt-10 grid gap-5">
-          {service.sections.map((section) => (
-            <article
-              key={section.heading}
-              className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
-            >
-              <h2 className="text-3xl font-black tracking-tight text-foreground">{section.heading}</h2>
-              <div className="mt-4 grid gap-4">
-                {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-base leading-7 text-muted-foreground">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </article>
-          ))}
-        </section>
+        {hasAeoContent && service.keyTakeaways ? (
+          <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <p className="app-kicker">Key Takeaways</p>
+            <div className="mt-5 grid gap-3">
+              {service.keyTakeaways.map((takeaway) => (
+                <div
+                  key={takeaway}
+                  className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-sm font-semibold leading-6 text-foreground"
+                >
+                  {takeaway}
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {hasAeoContent && service.aeoSections ? (
+          <section className="mt-10 grid gap-5">
+            {service.aeoSections.map((section) => (
+              <article
+                key={section.heading}
+                className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+              >
+                <h2 className="text-3xl font-black tracking-tight text-foreground">{section.heading}</h2>
+                <p className="mt-4 text-base leading-7 text-foreground">{section.directAnswer}</p>
+                <div className="mt-5 grid gap-3">
+                  {section.bullets.map((bullet) => (
+                    <div
+                      key={bullet}
+                      className="flex items-start gap-3 rounded-[1.4rem] border border-border bg-background px-4 py-4 text-sm font-semibold leading-6 text-foreground"
+                    >
+                      <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
+                      <span>{bullet}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 grid gap-4">
+                  <div className="rounded-[1.4rem] border border-border bg-background px-4 py-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Supporting Explanation</p>
+                    <p className="mt-2 text-base leading-7 text-muted-foreground">{section.supportingExplanation}</p>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-border bg-background px-4 py-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Real-World Example</p>
+                    <p className="mt-2 text-base leading-7 text-muted-foreground">{section.realWorldExample}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <section className="mt-10 grid gap-5">
+            {service.sections.map((section) => (
+              <article
+                key={section.heading}
+                className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+              >
+                <h2 className="text-3xl font-black tracking-tight text-foreground">{section.heading}</h2>
+                <div className="mt-4 grid gap-4">
+                  {section.paragraphs.map((paragraph) => (
+                    <p key={paragraph} className="text-base leading-7 text-muted-foreground">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        {hasAeoContent && service.comparisonTable ? (
+          <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <p className="app-kicker">Comparison Table</p>
+            <div className="mt-5 overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0 overflow-hidden rounded-[1.4rem] border border-border bg-background text-left">
+                <caption className="px-4 py-4 text-left text-sm font-medium text-muted-foreground">
+                  {service.comparisonTable.caption}
+                </caption>
+                <thead>
+                  <tr className="border-b border-border">
+                    {service.comparisonTable.columns.map((column) => (
+                      <th key={column} className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
+                        {column}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {service.comparisonTable.rows.map((row) => (
+                    <tr key={row.topic} className="align-top">
+                      <th className="border-b border-border px-4 py-4 text-sm font-semibold text-foreground">{row.topic}</th>
+                      <td className="border-b border-border px-4 py-4 text-sm leading-6 text-muted-foreground">{row.details}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         <CommercialProofSection
           enabled={businessInfo.commercialProofEnabled}
@@ -163,25 +289,41 @@ export default async function ServicePage({ params }: ServicePageProps) {
             </div>
           </div>
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">Related Pages</p>
+            <p className="app-kicker">{hasAeoContent ? "Suggested Internal Links" : "Related Pages"}</p>
             <div className="mt-5 grid gap-3">
-              {otherServices.map((link) => (
-                <Link key={link.href} href={link.href} className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-base font-semibold text-foreground transition hover:border-primary/30 hover:text-primary">
-                  {link.label}
+              {internalLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-[1.4rem] border border-border bg-background px-4 py-4 transition hover:border-primary/30 hover:text-primary"
+                >
+                  <span className="block text-base font-semibold text-foreground">{link.label}</span>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">{link.description}</span>
                 </Link>
               ))}
-              <Link href="/reviews" className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-base font-semibold text-foreground transition hover:border-primary/30 hover:text-primary">
-                Customer Reviews
-              </Link>
-              <Link href="/before-after" className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-base font-semibold text-foreground transition hover:border-primary/30 hover:text-primary">
-                Before &amp; After Photos
-              </Link>
-              <Link href="/faq" className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-base font-semibold text-foreground transition hover:border-primary/30 hover:text-primary">
-                Window Cleaning FAQs
-              </Link>
             </div>
           </div>
         </section>
+
+        {hasAeoContent && service.externalSources?.length ? (
+          <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <p className="app-kicker">Suggested External Authority Sources</p>
+            <div className="mt-5 grid gap-3">
+              {service.externalSources.map((source) => (
+                <a
+                  key={source.href}
+                  href={source.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-[1.4rem] border border-border bg-background px-4 py-4 transition hover:border-primary/30 hover:text-primary"
+                >
+                  <span className="block text-base font-semibold text-foreground">{source.label}</span>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">{source.description}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
     </div>
