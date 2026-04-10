@@ -1,48 +1,45 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { Button } from "@/components/ui/button";
+import { CORE_FAQS } from "@/lib/marketing-content";
+import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
+import { buildBreadcrumbSchema, buildFAQSchema, buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "FAQ",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Window Cleaning FAQ Las Vegas",
+  description:
+    "Answers to common Las Vegas window cleaning questions about pricing, service areas, screens, tracks, commercial work, and quote timing.",
+  path: "/faq",
+  keywords: ["window cleaning FAQ Las Vegas", "window cleaning questions Las Vegas", "Las Vegas window washing FAQ"],
+});
 
-const faqs = [
-  {
-    question: "Do I need to be home?",
-    answer: "No, as long as we have access.",
-  },
-  {
-    question: "How long does it take?",
-    answer: "Most homes are completed quickly depending on size.",
-  },
-  {
-    question: "What if I'm not happy?",
-    answer: "You don't pay until you approve the job.",
-  },
-  {
-    question: "What's included?",
-    answer: "Screens, frames, tracks, sills, and all glass.",
-  },
-  {
-    question: "How soon can you come out?",
-    answer: "Usually very quickly depending on schedule.",
-  },
-];
+export default async function FaqPage() {
+  const businessInfo = await readPublicBusinessSnapshot();
 
-export default function FaqPage() {
   return (
     <div className="app-page-shell-soft">
+      <JsonLd data={buildFAQSchema(CORE_FAQS)} />
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "FAQ", path: "/faq" },
+        ])}
+      />
       <PublicSiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
         <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-3xl space-y-5">
             <span className="app-kicker">FAQ</span>
             <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">
-              Questions? We&apos;ve Got You Covered
+              Las Vegas Window Cleaning Questions, Answered
             </h1>
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+              Better FAQ depth helps rankings, reduces objections, and gives homeowners and business owners a clearer path to booking.
+            </p>
             <Button asChild size="lg" className="rounded-full px-8 text-base">
               <Link href="/#quote-form">
                 Request a Call
@@ -53,7 +50,7 @@ export default function FaqPage() {
         </section>
 
         <section className="mt-8 grid gap-4">
-          {faqs.map((faq) => (
+          {CORE_FAQS.map((faq) => (
             <article
               key={faq.question}
               className="rounded-[1.9rem] border border-white/80 bg-white/94 px-6 py-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]"
@@ -77,7 +74,7 @@ export default function FaqPage() {
           </div>
         </section>
       </main>
-      <PublicSiteFooter />
+      <PublicSiteFooter businessInfo={businessInfo} />
     </div>
   );
 }

@@ -1,14 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
+  Building2,
   Glasses,
   Handshake,
   HeartHandshake,
   Home,
+  MapPin,
   ShieldCheck,
   Sparkles,
   Star,
@@ -19,10 +22,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/star-rating";
+import { BUSINESS, CORE_FAQS, SERVICE_PAGES } from "@/lib/marketing-content";
 import type { Review } from "@/lib/reviews";
 
 type CustomerQuoteLandingProps = {
   reviews: Review[];
+  businessInfo: {
+    servingSinceYear: number;
+    callOnly: boolean;
+    serviceAreaBusiness: boolean;
+    licenseStatusPublic: boolean;
+    insuredPublic: boolean;
+    publishedHoursSummary: readonly string[];
+    sameAs: readonly string[];
+    shortName: string;
+    phone: string;
+    phoneDisplay: string;
+    primaryLocation: string;
+    serviceAreas: readonly string[];
+  };
 };
 
 type LeadFormState = {
@@ -74,7 +92,7 @@ function getAverageRating(reviews: Review[]) {
   return (total / reviews.length).toFixed(1);
 }
 
-export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingProps) {
+export default function CustomerQuoteLanding({ reviews, businessInfo }: CustomerQuoteLandingProps) {
   const formRef = useRef<HTMLElement | null>(null);
   const [form, setForm] = useState<LeadFormState>(initialState);
   const [loading, setLoading] = useState(false);
@@ -181,10 +199,11 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
 
               <div className="max-w-3xl space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700">
                 <h1 className="max-w-4xl text-4xl font-black tracking-[-0.05em] text-balance text-foreground sm:text-5xl lg:text-6xl">
-                  Las Vegas Window Cleaning - Streak-Free Results, Guaranteed Before You Pay
+                  Window Cleaning Las Vegas Homeowners and Businesses Can Approve Before They Pay
                 </h1>
-                <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  We clean screens, frames, tracks, sills, and all glass - top to bottom.
+                <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+                  Residential window cleaning, commercial window cleaning, storefront glass cleaning, and exterior window
+                  washing across Las Vegas with screens, frames, tracks, sills, and glass cleaned top to bottom.
                 </p>
               </div>
 
@@ -192,7 +211,7 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
                 {[
                   "You do not pay until you approve the job",
                   "5% of every job goes back to Las Vegas",
-                  "We're already working in your area",
+                  `Serving Las Vegas since ${businessInfo.servingSinceYear}`,
                 ].map((item) => (
                   <div
                     key={item}
@@ -206,8 +225,15 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
                 ))}
               </div>
 
-              <div className="max-w-xl rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-4 text-sm text-amber-900 shadow-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
-                <p className="font-semibold">Our customer service team is currently busy - response times may be delayed</p>
+              <div className="max-w-3xl rounded-[1.8rem] border border-white/80 bg-white/92 px-5 py-5 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.24)] animate-in fade-in slide-in-from-bottom-10 duration-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Service Areas</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {BUSINESS.serviceAreas.map((area) => (
+                    <span key={area} className="app-chip">
+                      {area}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -353,9 +379,13 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
         <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
             { value: averageRating, label: "Average rating", icon: Star },
-            { value: `${reviews.length || 0}+`, label: "Homes served", icon: Home },
+            { value: `${reviews.length || 0}+`, label: "Reviews on site", icon: Home },
             { value: "5%", label: "Donated to charity", icon: HeartHandshake },
-            { value: "100%", label: "Satisfaction guarantee", icon: ShieldCheck },
+            {
+              value: businessInfo.licenseStatusPublic ? "Licensed" : "Local",
+              label: businessInfo.licenseStatusPublic ? "Business status" : "Las Vegas service",
+              icon: ShieldCheck,
+            },
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -413,6 +443,42 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
               </article>
             );
           })}
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-10">
+        <div className="max-w-3xl space-y-3">
+          <p className="app-kicker">Services</p>
+          <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            Residential, commercial, storefront, and high-rise support
+          </h2>
+          <p className="text-base leading-7 text-muted-foreground">
+            Supporting service pages help this homepage rank better by covering the main keyword variations people search in Las Vegas.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {SERVICE_PAGES.map((service) => (
+            <article key={service.slug} className="rounded-[2rem] border border-white/80 bg-white/92 px-6 py-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                {service.slug === "commercial-window-cleaning" ? (
+                  <Building2 className="size-5" />
+                ) : service.slug === "high-rise-window-cleaning" ? (
+                  <MapPin className="size-5" />
+                ) : (
+                  <Home className="size-5" />
+                )}
+              </span>
+              <h3 className="mt-5 text-2xl font-black tracking-tight text-foreground">{service.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{service.summary}</p>
+              <Button asChild variant="outline" className="mt-5 rounded-full">
+                <Link href={`/services/${service.slug}`}>
+                  Explore Service Page
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -481,6 +547,57 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
         </div>
       </section>
 
+      <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <p className="app-kicker">Las Vegas Focus</p>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+              Why local Las Vegas window cleaning pages matter
+            </h2>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              Valley windows deal with dust, hard water spotting, traffic film, and strong sun year-round. Local pages let the site
+              speak directly to those problems and give Google stronger service-area relevance than a generic homepage alone.
+            </p>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              We now support that with a dedicated Las Vegas service-area page and clearer internal links between services, reviews,
+              before-and-after proof, and FAQs.
+            </p>
+            {businessInfo.callOnly || businessInfo.serviceAreaBusiness ? (
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Call to book. We do not have a storefront right now, so every quote starts with a phone call and service-area review.
+              </p>
+            ) : null}
+            <Button asChild className="mt-6 rounded-full px-6">
+              <Link href="/service-areas/las-vegas">
+                View Las Vegas Service Area
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <p className="app-kicker">Nearby Areas</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {BUSINESS.serviceAreas.map((area) => (
+                <div key={area} className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-sm font-semibold text-foreground">
+                  {area}
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 rounded-[1.4rem] border border-border bg-background px-4 py-4">
+              <p className="text-sm font-semibold text-foreground">Published hours</p>
+              <div className="mt-2 grid gap-1">
+                {businessInfo.publishedHoursSummary.map((line) => (
+                  <p key={line} className="text-sm text-muted-foreground">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="rounded-[2.25rem] border border-white/80 bg-white/94 px-6 py-8 shadow-[0_26px_80px_-46px_rgba(15,23,42,0.32)] sm:px-8 lg:px-10">
           <div className="max-w-3xl space-y-3">
@@ -503,6 +620,31 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
+        <div className="max-w-3xl space-y-3">
+          <p className="app-kicker">FAQ</p>
+          <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            Questions people ask before booking window cleaning in Las Vegas
+          </h2>
+          <p className="text-base leading-7 text-muted-foreground">
+            Answering these on the page helps conversions and gives search engines more context about service scope, pricing, and local coverage.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4">
+          {CORE_FAQS.slice(0, 4).map((item) => (
+            <article key={item.question} className="rounded-[1.8rem] border border-white/80 bg-white/94 px-6 py-6 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+              <h3 className="text-2xl font-black tracking-tight text-foreground">{item.question}</h3>
+              <p className="mt-3 text-base leading-7 text-muted-foreground">{item.answer}</p>
+            </article>
+          ))}
+        </div>
+
+        <Button asChild variant="outline" className="mt-6 rounded-full px-6">
+          <Link href="/faq">Read All FAQs</Link>
+        </Button>
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
@@ -545,7 +687,7 @@ export default function CustomerQuoteLanding({ reviews }: CustomerQuoteLandingPr
 
       </main>
 
-      <PublicSiteFooter />
+      <PublicSiteFooter businessInfo={businessInfo} />
     </div>
   );
 }

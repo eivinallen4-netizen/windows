@@ -4,12 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu, PhoneCall, X } from "lucide-react";
 import { useState } from "react";
+import { BUSINESS } from "@/lib/marketing-content";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
+  { href: "/services", label: "Services" },
+  { href: "/service-areas/las-vegas", label: "Las Vegas" },
   { href: "/reviews", label: "Reviews" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/pricing", label: "Pricing" },
   { href: "/before-after", label: "Before & After" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
@@ -42,7 +43,7 @@ export function PublicSiteHeader() {
                 PureBin
               </p>
               <p className="truncate text-sm font-medium text-foreground/80 transition-colors group-hover:text-primary">
-                Window Cleaning
+                Window Cleaning Las Vegas
               </p>
             </div>
           </Link>
@@ -56,6 +57,12 @@ export function PublicSiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="hidden rounded-full px-4 md:inline-flex">
+              <a href={`tel:${BUSINESS.phone}`}>
+                {BUSINESS.phoneDisplay}
+                <PhoneCall className="size-4" />
+              </a>
+            </Button>
             <Button asChild size="sm" className="hidden rounded-full px-4 sm:inline-flex">
               <Link href="/#quote-form">
                 Request a Call
@@ -89,6 +96,12 @@ export function PublicSiteHeader() {
                   <Link href={link.href}>{link.label}</Link>
                 </Button>
               ))}
+              <Button asChild variant="outline" className="h-12 justify-start rounded-2xl">
+                <a href={`tel:${BUSINESS.phone}`}>
+                  {BUSINESS.phoneDisplay}
+                  <PhoneCall className="size-4" />
+                </a>
+              </Button>
               <Button asChild className="mt-2 h-12 rounded-full" onClick={() => setMenuOpen(false)}>
                 <Link href="/#quote-form">
                   Request a Call

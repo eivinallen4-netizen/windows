@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { Button } from "@/components/ui/button";
+import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
+import { buildBreadcrumbSchema, buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Pricing",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Window Cleaning Pricing Las Vegas",
+  description:
+    "Learn how window cleaning pricing works in Las Vegas, including pane count, access, interior versus exterior scope, and quote-first confirmation.",
+  path: "/pricing",
+  keywords: ["window cleaning pricing Las Vegas", "window washing cost Las Vegas", "residential window cleaning price Las Vegas"],
+});
 
 const pricingFactors = [
   "Pane count",
@@ -20,19 +27,27 @@ const reassurances = [
   "You approve everything before we start",
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const businessInfo = await readPublicBusinessSnapshot();
+
   return (
     <div className="app-page-shell-soft">
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Pricing", path: "/pricing" },
+        ])}
+      />
       <PublicSiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
         <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-3xl space-y-5">
             <span className="app-kicker">Pricing</span>
             <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">
-              Simple, Transparent Pricing
+              Simple, Transparent Window Cleaning Pricing in Las Vegas
             </h1>
             <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              No surprises. No hidden fees.
+              No surprises, no hidden fees, and no vague “starting at” games before the quote is reviewed.
             </p>
             <Button asChild size="lg" className="rounded-full px-8 text-base">
               <Link href="/#quote-form">
@@ -46,10 +61,11 @@ export default function PricingPage() {
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
             <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">
-              Most homes fall within a typical range depending on size and service
+              Pricing depends on scope, access, pane count, and the exact service mix
             </h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              We keep pricing fair and clear, then confirm the exact number with you before the job is ever scheduled.
+              We keep pricing fair and clear, then confirm the exact number with you before the job is ever scheduled. That approach
+              works for residential window cleaning, commercial window cleaning, exterior-only service, and more detailed glass-cleaning requests.
             </p>
           </div>
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
@@ -62,6 +78,14 @@ export default function PricingPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+          <p className="app-kicker">What This Prevents</p>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
+            Detailed pricing content reduces weak leads, answers common objections earlier, and makes it easier for the page to rank for
+            price-related searches without turning the site into a discount page.
+          </p>
         </section>
 
         <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
@@ -88,7 +112,7 @@ export default function PricingPage() {
           </div>
         </section>
       </main>
-      <PublicSiteFooter />
+      <PublicSiteFooter businessInfo={businessInfo} />
     </div>
   );
 }

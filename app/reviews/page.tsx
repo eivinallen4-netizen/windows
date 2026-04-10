@@ -3,19 +3,26 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Home, MapPin } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/star-rating";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { getReviews } from "@/lib/reviews";
 import { getPublicArea } from "@/lib/public-site";
+import { buildBreadcrumbSchema, buildLocalBusinessSchema, buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Reviews",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Window Cleaning Reviews Las Vegas",
+  description:
+    "Read Las Vegas window cleaning reviews, testimonials, and before-and-after results from completed jobs across the valley.",
+  path: "/reviews",
+  keywords: ["window cleaning reviews Las Vegas", "Las Vegas window washing reviews", "window cleaning testimonials Las Vegas"],
+});
 
 function isDirectFile(url: string | undefined) {
   if (!url) return false;
@@ -26,11 +33,18 @@ export default async function ReviewsPage() {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(getSessionCookieName())?.value;
   const session = sessionToken ? await verifySessionToken(sessionToken) : null;
-  const reviews = await getReviews();
+  const [reviews, businessInfo] = await Promise.all([getReviews(), readPublicBusinessSnapshot()]);
   const featuredReviews = reviews.length ? reviews : [];
 
   return (
     <div className="app-page-shell-soft">
+      <JsonLd data={buildLocalBusinessSchema(reviews, businessInfo)} />
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Reviews", path: "/reviews" },
+        ])}
+      />
       {session ? <SiteHeader /> : <PublicSiteHeader />}
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
         <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
@@ -150,7 +164,7 @@ export default async function ReviewsPage() {
         </section>
       </main>
 
-      <PublicSiteFooter />
+      <PublicSiteFooter businessInfo={businessInfo} />
     </div>
   );
 }

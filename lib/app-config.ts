@@ -3,6 +3,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { defaultPricing, type Pricing } from "@/lib/pricing";
+import { normalizePublicBusinessConfig, type PublicBusinessConfig } from "@/lib/public-business";
 import { defaultScheduleWindows, normalizeScheduleWindowsConfig, type ScheduleWindowsConfig } from "@/lib/schedule-types";
 import { hasTursoConfig, tursoExecute } from "@/lib/turso";
 
@@ -13,6 +14,7 @@ export type AppConfig = {
   addonsConfig: AddonConfig[];
   repCommissionPercent: number;
   scheduleWindows: ScheduleWindowsConfig;
+  publicBusiness: PublicBusinessConfig;
   plans: {
     activePlan: AppPlan;
     free: {
@@ -68,6 +70,7 @@ export const defaultAppConfig: AppConfig = {
   addonsConfig: defaultAddonsConfig,
   repCommissionPercent: 25,
   scheduleWindows: defaultScheduleWindows,
+  publicBusiness: normalizePublicBusinessConfig(undefined, defaultScheduleWindows.rep),
   plans: {
     activePlan: "pro",
     free: {
@@ -103,6 +106,7 @@ function isAppConfig(value: unknown): value is AppConfig {
     isPricing(config.pricing) &&
     (config.repCommissionPercent === undefined || isNumber(config.repCommissionPercent)) &&
     (config.scheduleWindows === undefined || typeof config.scheduleWindows === "object") &&
+    (config.publicBusiness === undefined || typeof config.publicBusiness === "object") &&
     (config.plans?.activePlan === "free" || config.plans?.activePlan === "pro") &&
     typeof config.plans?.free?.addonsFree === "boolean"
   );
@@ -138,12 +142,14 @@ async function tryReadLegacyPricing(): Promise<Pricing | null> {
 
 function normalizeConfig(config: AppConfig): AppConfig {
   const normalizedAddons = normalizeAddonsConfig(config.addonsConfig);
+  const normalizedScheduleWindows = normalizeScheduleWindowsConfig(config.scheduleWindows);
   return {
     ...config,
     repCommissionPercent: isNumber(config.repCommissionPercent)
       ? config.repCommissionPercent
       : defaultAppConfig.repCommissionPercent,
-    scheduleWindows: normalizeScheduleWindowsConfig(config.scheduleWindows),
+    scheduleWindows: normalizedScheduleWindows,
+    publicBusiness: normalizePublicBusinessConfig(config.publicBusiness, normalizedScheduleWindows.rep),
     pricing: {
       ...config.pricing,
       addons: normalizedAddons.reduce<Pricing["addons"]>((acc, addon) => {

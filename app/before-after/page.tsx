@@ -2,15 +2,22 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { Button } from "@/components/ui/button";
+import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { getReviews } from "@/lib/reviews";
+import { buildBreadcrumbSchema, buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "Before & After",
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "Before and After Window Cleaning Las Vegas",
+  description:
+    "See before-and-after window cleaning photos from Las Vegas jobs, including real glass-cleaning results and visible detail work.",
+  path: "/before-after",
+  keywords: ["before and after window cleaning Las Vegas", "window washing photos Las Vegas", "glass cleaning before after Las Vegas"],
+});
 
 const captions = [
   "Hard water removed",
@@ -24,11 +31,17 @@ function isDirectFile(url: string | undefined) {
 }
 
 export default async function BeforeAfterPage() {
-  const reviews = await getReviews();
+  const [reviews, businessInfo] = await Promise.all([getReviews(), readPublicBusinessSnapshot()]);
   const comparisonReviews = reviews.filter((review) => review.houseAfterPhotoUrl).slice(0, 6);
 
   return (
     <div className="app-page-shell-soft">
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Before & After", path: "/before-after" },
+        ])}
+      />
       <PublicSiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
         <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
@@ -111,7 +124,7 @@ export default async function BeforeAfterPage() {
           </div>
         </section>
       </main>
-      <PublicSiteFooter />
+      <PublicSiteFooter businessInfo={businessInfo} />
     </div>
   );
 }

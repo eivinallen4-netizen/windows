@@ -31,7 +31,14 @@ import { SiteHeader } from "@/components/site-header";
 import { ScheduleWindowSettings } from "@/components/schedule-window-settings";
 import { ScheduleAdminLinks } from "@/components/schedule-admin-links";
 import { UsersAdminPanel } from "@/components/users-admin-panel";
+import { WeeklyHoursSettings } from "@/components/weekly-hours-settings";
 import { defaultPricing, type PaneType, type Pricing, type StoryLevel } from "@/lib/pricing";
+import {
+  DEFAULT_INSTAGRAM_URL,
+  defaultPublicBusinessConfig,
+  normalizePublicBusinessConfig,
+  type PublicBusinessConfig,
+} from "@/lib/public-business";
 import { computeQuote, type AddOnSelection, type QuoteSelections } from "@/lib/quote";
 import { defaultScheduleWindows, type ScheduleWindowsConfig } from "@/lib/schedule-types";
 
@@ -99,6 +106,7 @@ type AppConfig = {
   addonsConfig: AddonConfig[];
   repCommissionPercent: number;
   scheduleWindows: ScheduleWindowsConfig;
+  publicBusiness: PublicBusinessConfig;
   plans: {
     activePlan: AppPlan;
     free: {
@@ -250,8 +258,9 @@ export default function AdminPage() {
   const [freeAddons, setFreeAddons] = useState(true);
   const [repCommissionPercent, setRepCommissionPercent] = useState(25);
   const [scheduleWindows, setScheduleWindows] = useState<ScheduleWindowsConfig>(defaultScheduleWindows);
+  const [publicBusiness, setPublicBusiness] = useState<PublicBusinessConfig>(defaultPublicBusinessConfig);
   const [activeSection, setActiveSection] = useState<
-    "quotes" | "reps" | "reviews" | "jobs" | "schedule" | "pricing" | "addons" | "email" | "users"
+    "quotes" | "reps" | "reviews" | "jobs" | "schedule" | "pricing" | "business" | "addons" | "email" | "users"
   >("quotes");
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -373,6 +382,7 @@ export default function AdminPage() {
       section === "jobs" ||
       section === "schedule" ||
       section === "pricing" ||
+      section === "business" ||
       section === "addons" ||
       section === "email" ||
       section === "users"
@@ -441,6 +451,9 @@ export default function AdminPage() {
             Number.isFinite(data.repCommissionPercent) ? data.repCommissionPercent : 25
           );
           setScheduleWindows(data.scheduleWindows ?? defaultScheduleWindows);
+          setPublicBusiness(
+            normalizePublicBusinessConfig(data.publicBusiness, data.scheduleWindows?.rep ?? defaultScheduleWindows.rep),
+          );
           setPricingJson(JSON.stringify(data.pricing, null, 2));
           setPricingJsonError(null);
           lastSavedRef.current = JSON.stringify({
@@ -448,6 +461,10 @@ export default function AdminPage() {
             addonsConfig: data.addonsConfig ?? [],
             repCommissionPercent: Number.isFinite(data.repCommissionPercent) ? data.repCommissionPercent : 25,
             scheduleWindows: data.scheduleWindows ?? defaultScheduleWindows,
+            publicBusiness: normalizePublicBusinessConfig(
+              data.publicBusiness,
+              data.scheduleWindows?.rep ?? defaultScheduleWindows.rep,
+            ),
             plans: { activePlan: data.plans.activePlan, free: { addonsFree: data.plans.free.addonsFree } },
           });
           autoSaveReadyRef.current = true;
@@ -1316,6 +1333,7 @@ export default function AdminPage() {
       addonsConfig,
       repCommissionPercent,
       scheduleWindows,
+      publicBusiness,
       plans: {
         activePlan,
         free: {
@@ -1323,7 +1341,7 @@ export default function AdminPage() {
         },
       },
     }),
-    [pricing, addonsConfig, repCommissionPercent, scheduleWindows, activePlan, freeAddons]
+    [pricing, addonsConfig, repCommissionPercent, scheduleWindows, publicBusiness, activePlan, freeAddons]
   );
 
   async function handleResetNonUserData() {
@@ -1356,6 +1374,12 @@ export default function AdminPage() {
       setAddonsConfig(payload.config.addonsConfig ?? []);
       setRepCommissionPercent(payload.config.repCommissionPercent ?? 25);
       setScheduleWindows(payload.config.scheduleWindows ?? defaultScheduleWindows);
+      setPublicBusiness(
+        normalizePublicBusinessConfig(
+          payload.config.publicBusiness,
+          payload.config.scheduleWindows?.rep ?? defaultScheduleWindows.rep,
+        ),
+      );
       setActivePlan(payload.config.plans?.activePlan ?? "pro");
       setFreeAddons(payload.config.plans?.free?.addonsFree ?? true);
       setPricingJson(JSON.stringify(payload.config.pricing, null, 2));
@@ -1408,6 +1432,23 @@ export default function AdminPage() {
       setError(message);
     }
   }, [buildAppConfigPayload, pricing]);
+
+  const publicSameAsText = useMemo(() => publicBusiness.sameAsLinks.join("\n"), [publicBusiness.sameAsLinks]);
+
+  function updatePublicBusiness<K extends keyof PublicBusinessConfig>(key: K, value: PublicBusinessConfig[K]) {
+    setPublicBusiness((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
+  function copyRepTimeframesToPublishedHours() {
+    setPublicBusiness((current) => normalizePublicBusinessConfig({
+      ...current,
+      publishedHours: scheduleWindows.rep,
+    }, scheduleWindows.rep));
+    setToast("Published hours copied from current rep time frames.");
+  }
 
   useEffect(() => {
     if (!autoSaveReadyRef.current) return;
@@ -1679,6 +1720,7 @@ export default function AdminPage() {
     { id: "jobs", label: "Jobs" },
     { id: "schedule", label: "Schedule" },
     { id: "pricing", label: "Pricing" },
+    { id: "business", label: "Business" },
     { id: "addons", label: "Add-ons" },
     { id: "email", label: "Leads" },
     { id: "users", label: "Users" },
@@ -2769,6 +2811,157 @@ export default function AdminPage() {
                 <Button type="button" variant="outline" onClick={refreshPricingJson}>
                   Refresh JSON
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+          </>
+          ) : null}
+
+          {activeSection === "business" ? (
+          <>
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
+            <CardHeader>
+              <CardTitle>Public Business Info</CardTitle>
+              <CardDescription>Manage the verified business facts shown on the public site and in schema.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serving-since-year">Serving since year</Label>
+                  <Input
+                    id="serving-since-year"
+                    type="number"
+                    min={1900}
+                    max={2100}
+                    value={publicBusiness.servingSinceYear}
+                    onChange={(event) =>
+                      updatePublicBusiness("servingSinceYear", Math.max(1900, Number(event.target.value) || 2022))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="public-gbp-url">Google Business Profile URL</Label>
+                  <Input
+                    id="public-gbp-url"
+                    value={publicBusiness.gbpUrl ?? ""}
+                    onChange={(event) => updatePublicBusiness("gbpUrl", event.target.value)}
+                    placeholder="Leave blank until verification is complete"
+                  />
+                  <p className="text-xs text-slate-500">Keep this blank until the public GBP share link is fully verified.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="same-as-links">Verified public profile links</Label>
+                  <Textarea
+                    id="same-as-links"
+                    rows={5}
+                    value={publicSameAsText}
+                    onChange={(event) =>
+                      updatePublicBusiness(
+                        "sameAsLinks",
+                        event.target.value
+                          .split(/\r?\n/)
+                          .map((line) => line.trim())
+                          .filter(Boolean),
+                      )
+                    }
+                    placeholder={DEFAULT_INSTAGRAM_URL}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-slate-500">Enter one verified public URL per line. Instagram is the default starting link.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Public trust and availability</p>
+                  <div className="mt-4 grid gap-3">
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={publicBusiness.serviceAreaBusiness}
+                        onChange={(event) => updatePublicBusiness("serviceAreaBusiness", event.target.checked)}
+                      />
+                      Service-area business only
+                    </label>
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={publicBusiness.callOnly}
+                        onChange={(event) => updatePublicBusiness("callOnly", event.target.checked)}
+                      />
+                      Call to book / no storefront
+                    </label>
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={publicBusiness.licenseStatusPublic}
+                        onChange={(event) => updatePublicBusiness("licenseStatusPublic", event.target.checked)}
+                      />
+                      Show licensed-business wording
+                    </label>
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={publicBusiness.insuredPublic}
+                        onChange={(event) => updatePublicBusiness("insuredPublic", event.target.checked)}
+                      />
+                      Show insured wording
+                    </label>
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={publicBusiness.commercialProofEnabled}
+                        onChange={(event) => updatePublicBusiness("commercialProofEnabled", event.target.checked)}
+                      />
+                      Enable commercial proof framework
+                    </label>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Seed published hours</p>
+                      <p className="text-xs text-slate-500">Copies the current rep time-frame settings into the public-hours editor below.</p>
+                    </div>
+                    <Button type="button" variant="outline" onClick={copyRepTimeframesToPublishedHours}>
+                      <Copy className="size-4" />
+                      Copy Rep Time Frames
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <WeeklyHoursSettings
+            title="Published Hours"
+            description="These hours are public-facing and separate from weekly rep scheduling after you seed them."
+            value={publicBusiness.publishedHours}
+            onChange={(value) => updatePublicBusiness("publishedHours", value)}
+          />
+
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
+            <CardHeader>
+              <CardTitle>GBP Alignment Targets</CardTitle>
+              <CardDescription>Keep Google Business Profile wording aligned with the public site when verification is complete.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">Primary category</p>
+                <p className="mt-2 text-sm text-slate-600">Window cleaning service</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">Services</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Residential window cleaning, commercial window cleaning, storefront window cleaning, high-rise window cleaning, glass cleaning, exterior window washing
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">Service areas</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Las Vegas, Summerlin, Henderson, Green Valley, Centennial Hills, Southern Highlands, Spring Valley, Enterprise, Skye Canyon
+                </p>
               </div>
             </CardContent>
           </Card>

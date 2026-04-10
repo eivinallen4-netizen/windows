@@ -2,31 +2,25 @@ import type { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-
-function getMetadataBase() {
-  const configuredUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
-  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
-  const siteUrl =
-    configuredUrl && !configuredUrl.includes("localhost")
-      ? configuredUrl
-      : vercelUrl
-        ? `https://${vercelUrl.replace(/^https?:\/\//, "")}`
-        : "http://localhost:3000";
-
-  try {
-    return new URL(siteUrl);
-  } catch {
-    return new URL("http://localhost:3000");
-  }
-}
+import { BUSINESS } from "@/lib/marketing-content";
+import { getMetadataBase } from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
   title: {
-    default: "PureBin Window Cleaning",
+    default: `${BUSINESS.name} | Window Cleaning Las Vegas`,
     template: "%s | PureBin Window Cleaning",
   },
-  description: "Window cleaning quote calculator, reviews, and field admin tools.",
+  description: BUSINESS.description,
+  keywords: [
+    "window cleaning Las Vegas",
+    "residential window cleaning Las Vegas",
+    "commercial window cleaning Las Vegas",
+    "storefront window cleaning Las Vegas",
+    "glass cleaning Las Vegas",
+    "exterior window washing Las Vegas",
+  ],
+  applicationName: BUSINESS.name,
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -35,16 +29,32 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
     apple: "/logo.png",
   },
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    title: "PureBin Window Cleaning",
-    description: "Window cleaning quote calculator, reviews, and field admin tools.",
-    siteName: "PureBin Window Cleaning",
+    title: `${BUSINESS.name} | Window Cleaning Las Vegas`,
+    description: BUSINESS.description,
+    siteName: BUSINESS.name,
+    locale: "en_US",
+    type: "website",
     images: ["/logo.png"],
   },
   twitter: {
-    card: "summary",
-    title: "PureBin Window Cleaning",
-    description: "Window cleaning quote calculator, reviews, and field admin tools.",
+    card: "summary_large_image",
+    title: `${BUSINESS.name} | Window Cleaning Las Vegas`,
+    description: BUSINESS.description,
     images: ["/logo.png"],
   },
 };
