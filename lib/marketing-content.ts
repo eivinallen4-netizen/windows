@@ -56,12 +56,12 @@ export const CORE_FAQS = [
   {
     question: "How much does window cleaning cost in Las Vegas?",
     answer:
-      "Pricing depends on pane count, access, window type, interior versus exterior scope, and any add-ons like track cleaning or hard water treatment. The site is built around quote-first pricing, so the exact number is confirmed before the job moves forward.",
+      "Pricing depends on pane count, access, window type, interior versus exterior scope, and any add-ons like track cleaning or hard water treatment. We use quote-first pricing, so the exact number is confirmed before the job moves forward.",
   },
   {
     question: "Do you clean residential and commercial windows?",
     answer:
-      "Yes. The site supports residential quotes and also highlights commercial window cleaning for storefronts, offices, and other properties that need consistent glass care in the Las Vegas valley.",
+      "Yes. We take residential quotes and also provide commercial window cleaning for storefronts, offices, and other properties that need consistent glass care in the Las Vegas valley.",
   },
   {
     question: "Can you help with hard water spots and desert dust buildup?",
@@ -71,7 +71,7 @@ export const CORE_FAQS = [
   {
     question: "How fast can I get a quote?",
     answer:
-      "The homepage form is designed for a fast callback. Once the home or property details are reviewed, the team can confirm pricing and the next scheduling step.",
+      "Submit the homepage form for a fast callback. Once the home or property details are reviewed, the team can confirm pricing and the next scheduling step.",
   },
   {
     question: "Do you clean storefronts, multi-story buildings, or high-rise glass?",
@@ -81,7 +81,7 @@ export const CORE_FAQS = [
   {
     question: "What service areas do you cover?",
     answer:
-      "The public site focuses on Las Vegas and nearby areas including Summerlin, Henderson, Green Valley, Centennial Hills, Southern Highlands, Spring Valley, Enterprise, and Skye Canyon.",
+      "We focus on Las Vegas and nearby areas including Summerlin, Henderson, Green Valley, Centennial Hills, Southern Highlands, Spring Valley, Enterprise, and Skye Canyon.",
   },
 ] as const;
 
@@ -220,7 +220,7 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
           "Trust signals matter when the company explains service areas and final approval clearly",
         ],
         supportingExplanation:
-          "A strong residential page should answer the buying questions directly instead of relying on generic claims. For this market, that means explaining what gets cleaned, what changes the quote, and why Las Vegas homes need regular glass care.",
+          "We answer the buying questions directly instead of relying on generic claims. For this market, that means explaining what gets cleaned, what changes the quote, and why Las Vegas homes need regular glass care.",
         realWorldExample:
           "A homeowner in Henderson deciding between basic glass-only service and a fuller window-detailing visit can use the quote conversation to confirm whether screens, tracks, and sills should be included.",
       },
@@ -242,11 +242,11 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
     ],
     comparisonTable: {
       caption: "Residential window cleaning factors homeowners compare before booking",
-      columns: ["Topic", "PureBin LV residential page answer"],
+      columns: ["Topic", "How PureBin LV handles it"],
       rows: [
         {
           topic: "Included scope",
-          details: "The page explains that quotes can include glass, screens, frames, tracks, and sills.",
+          details: "Quotes can include glass, screens, frames, tracks, and sills when you confirm the scope.",
         },
         {
           topic: "Pricing logic",
@@ -266,22 +266,22 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
       {
         heading: "Exterior window washing built for Las Vegas homes",
         paragraphs: [
-          "Desert wind, hard water, and long sun exposure make exterior glass look dull faster in the valley. Residential service copy should speak directly to those local issues instead of using generic window-cleaning language.",
-          "That local framing helps the page rank for window cleaning Las Vegas while also making the value proposition clearer for homeowners comparing options.",
+          "Desert wind, hard water, and long sun exposure make exterior glass look dull faster in the valley. We speak directly to those local issues instead of using generic window-cleaning language.",
+          "That local framing makes the value clear for homeowners comparing options.",
         ],
       },
       {
         heading: "What homeowners expect from a full-service glass cleaning visit",
         paragraphs: [
-          "The strongest converting pages do not stop at glass-only language. They explain that screens, frames, tracks, sills, and visible edges matter because homeowners judge the final result as a full-window finish.",
-          "This site already has that strength on the homepage, so the residential page reinforces it and turns it into crawlable service content.",
+          "The best residential window cleaning does not stop at glass-only language. We explain that screens, frames, tracks, sills, and visible edges matter because homeowners judge the final result as a full-window finish.",
+          "This matches what we show on the homepage, with a full residential page so you can see exactly what is included.",
         ],
       },
       {
         heading: "Property types and quote factors",
         paragraphs: [
-          "Residential quotes should naturally reference single-story homes, two-story homes, condos, townhomes, and custom properties. That helps match local search variations while setting expectations for scope.",
-          "Pane count, access, specialty windows, interior versus exterior work, and add-ons like track cleaning or hard water treatment all belong on the page because they answer pricing questions before a lead ever calls.",
+          "Residential quotes reference single-story homes, two-story homes, condos, townhomes, and custom properties so expectations stay realistic.",
+          "Pane count, access, specialty windows, interior versus exterior work, and add-ons like track cleaning or hard water treatment are all discussed during quoting so you know the price before you book.",
         ],
       },
     ],
@@ -302,12 +302,12 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
       {
         href: "/service-areas/las-vegas",
         label: "Window Cleaning Las Vegas, NV",
-        description: "Local service-area page for Las Vegas neighborhoods and coverage context.",
+        description: "Las Vegas neighborhoods and where we work.",
       },
       {
         href: "/faq",
         label: "Window Cleaning FAQs",
-        description: "Answer cluster covering pricing, access, service areas, and scheduling questions.",
+        description: "Common questions about pricing, access, service areas, and scheduling.",
       },
       {
         href: "/reviews",
@@ -322,12 +322,12 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
       {
         href: "/services/commercial-window-cleaning",
         label: "Commercial Window Cleaning Las Vegas",
-        description: "Related service page for offices, storefronts, and managed properties.",
+        description: "Offices, storefronts, and managed properties.",
       },
       {
         href: "/services/high-rise-window-cleaning",
         label: "High-Rise Window Cleaning Las Vegas",
-        description: "Related page for multi-story or difficult-access glass requests.",
+        description: "Multi-story or difficult-access glass requests.",
       },
     ],
     externalSources: [
@@ -356,9 +356,9 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
     description:
       "Commercial window cleaning in Las Vegas for offices, storefronts, retail spaces, and managed properties that need clean glass and a dependable service process.",
     intro:
-      "Commercial properties need clean glass for curb appeal, tenant perception, and day-to-day presentation. This page gives businesses a more specific target than the generic homepage alone.",
+      "Commercial properties need clean glass for curb appeal, tenant perception, and day-to-day presentation. We go deeper here than a single homepage line so offices, storefronts, and managed properties know what to expect.",
     summary:
-      "The content is written to support commercial window cleaning, storefront window cleaning, glass cleaning, and exterior window washing searches in Las Vegas without sounding stuffed.",
+      "Commercial window cleaning, storefront glass, and exterior washing for Las Vegas businesses—explained clearly without jargon or vague promises.",
     keywords: [
       "commercial window cleaning Las Vegas",
       "storefront window cleaning Las Vegas",
@@ -369,28 +369,28 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
       "Storefront and office glass cleaning",
       "Recurring service conversations for commercial properties",
       "Quote-first process for property managers and business owners",
-      "Supportive copy for retail, restaurant, office, and mixed-use properties",
+      "Retail, restaurant, office, and mixed-use properties welcome",
     ],
     sections: [
       {
         heading: "Storefront window cleaning that protects first impressions",
         paragraphs: [
-          "Las Vegas storefront glass picks up traffic film, fingerprints, dust, and hard water much faster than residential windows. That makes storefront-specific copy useful both for rankings and for conversions.",
-          "Commercial visitors want to know the service is dependable and presentation-focused, not just affordable. This page leans into that buying motive.",
+          "Las Vegas storefront glass picks up traffic film, fingerprints, dust, and hard water much faster than residential windows. Storefront-specific service details help you decide faster and book with confidence.",
+          "Commercial visitors want to know the service is dependable and presentation-focused, not just affordable. We speak to that directly.",
         ],
       },
       {
         heading: "Commercial glass cleaning for offices, retail, and managed properties",
         paragraphs: [
-          "A strong commercial page should name property types naturally: offices, retail centers, restaurants, storefronts, property-management accounts, and mixed-use buildings.",
-          "The current site now gives those use cases their own crawlable content instead of forcing every query back to the homepage.",
+          "We name property types clearly: offices, retail centers, restaurants, storefronts, property-management accounts, and mixed-use buildings.",
+          "Each use case gets its own explanation here instead of sending every question back to a generic overview.",
         ],
       },
       {
         heading: "Larger hospitality and specialty properties",
         paragraphs: [
-          "Las Vegas commercial search behavior often overlaps with hospitality, resort, and casino window cleaning searches. Because capability can vary by access and safety requirements, the page references those property types carefully and routes them into a scope review instead of making broad unsupported claims.",
-          "That approach captures intent while staying accurate.",
+          "Many Las Vegas businesses ask about hospitality, resort, and casino-related glass. Because access and safety requirements vary, we review those properties individually and confirm fit before scheduling.",
+          "That keeps expectations honest and the plan realistic.",
         ],
       },
     ],
@@ -401,7 +401,7 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
       {
         question: "Can I request recurring storefront or office service?",
         answer:
-          "Yes. Commercial pages should invite conversations around recurring glass cleaning because many businesses want dependable upkeep rather than a one-time visit.",
+          "Yes. Many businesses want recurring glass cleaning for dependable upkeep rather than a one-time visit—ask when you request a quote.",
       },
       {
         question: "Do you handle larger commercial properties in Las Vegas?",
@@ -418,9 +418,9 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
     description:
       "High-rise window cleaning in Las Vegas for multi-story and difficult-access glass, starting with a scope review to confirm safety, access, and fit.",
     intro:
-      "High-rise and difficult-access glass searches are valuable in Las Vegas, but they require careful copy. This page targets that demand without overstating capabilities that have not been confirmed.",
+      "High-rise and difficult-access glass in Las Vegas needs careful scoping. We explain the process honestly and avoid overstating capabilities that have not been confirmed.",
     summary:
-      "Instead of claiming every tower or casino account outright, the page positions high-rise requests around a scope review, access planning, and property-fit confirmation.",
+      "Instead of claiming every tower or casino account outright, we route high-rise requests through a scope review, access planning, and property-fit confirmation.",
     keywords: [
       "high-rise window cleaning Las Vegas",
       "casino window cleaning Las Vegas",
@@ -430,29 +430,29 @@ export const SERVICE_PAGES: readonly ServicePageEntry[] = [
     highlights: [
       "Multi-story and difficult-access quote reviews",
       "Clear language around safety and property-fit confirmation",
-      "Hospitality, resort, and casino-adjacent search coverage without false claims",
-      "Strong internal support for high-rise keyword variations",
+      "Hospitality, resort, and casino-adjacent jobs reviewed honestly—no false claims",
+      "Clear wording for multi-story and difficult-access requests",
     ],
     sections: [
       {
         heading: "Start with access, safety, and scope",
         paragraphs: [
-          "High-rise window cleaning is a different buying decision from a standard residential job. Searchers want to know whether a company can review access conditions, height, site logistics, and safety requirements before committing to a date.",
-          "The page now reflects that decision path so it can rank for high-rise intent without sounding like a generic residential service page with a swapped headline.",
+          "High-rise window cleaning is a different buying decision from a standard residential job. You need to know whether a company can review access conditions, height, site logistics, and safety requirements before committing to a date.",
+          "We reflect that decision path clearly so high-rise requests get a real answer—not a residential page with a new headline.",
         ],
       },
       {
         heading: "Las Vegas hospitality, resort, and casino glass needs",
         paragraphs: [
-          "Search demand in Las Vegas includes casino window cleaning and other hospitality-related phrases. Because those properties vary widely, the most accurate approach is to invite a scope review for hotels, resorts, casino-adjacent properties, and other large facilities.",
-          "That captures local-commercial relevance while keeping the site factually safe.",
+          "Las Vegas includes casino window cleaning and other hospitality-related needs. Because those properties vary widely, the most accurate approach is a scope review for hotels, resorts, casino-adjacent properties, and other large facilities.",
+          "That keeps expectations aligned with what can be delivered safely.",
         ],
       },
       {
-        heading: "When this page should convert",
+        heading: "When you are ready to move forward",
         paragraphs: [
-          "This page is built to convert property managers, facilities teams, and business owners who need a real answer on fit. The call to action is intentionally quote-focused instead of promising instant scheduling for every high-access property.",
-          "That is the right trust posture when building commercial SEO around a service with more operational requirements.",
+          "Property managers, facilities teams, and business owners need a straight answer on fit. The call to action stays quote-focused instead of promising instant scheduling for every high-access property.",
+          "That is the right trust posture for a service with real operational requirements.",
         ],
       },
     ],
@@ -478,7 +478,7 @@ export const SERVICE_AREA_PAGES = [
     slug: "las-vegas",
     title: "Window Cleaning Las Vegas, NV",
     description:
-      "Window cleaning in Las Vegas, NV for homes, storefronts, and commercial properties with clear quotes, review-backed proof, and local service-area relevance.",
+      "Window cleaning in Las Vegas, NV for homes, storefronts, and commercial properties with clear quotes, review-backed proof, and valley-wide coverage.",
     keywords: [
       "window cleaning Las Vegas",
       "Las Vegas window washing",
@@ -486,7 +486,7 @@ export const SERVICE_AREA_PAGES = [
       "exterior window washing Las Vegas",
     ],
     intro:
-      "Las Vegas is the core market for the site, so this page supports the homepage with a dedicated local landing page built around service intent, neighborhood relevance, and conversion-focused content.",
+      "Las Vegas is our core market. This page gives valley homeowners and businesses a clear local overview with neighborhood relevance and straightforward next steps.",
     neighborhoods: [
       "Summerlin",
       "Centennial Hills",
@@ -501,22 +501,22 @@ export const SERVICE_AREA_PAGES = [
       {
         heading: "Why Las Vegas windows need regular cleaning",
         paragraphs: [
-          "Between hard water, desert dust, traffic film, and year-round sun, glass in Las Vegas loses clarity quickly. Local copy should say that directly because it is the reason many homeowners and businesses start searching in the first place.",
-          "This page now gives Google a dedicated local URL that explains those conditions in natural language.",
+          "Between hard water, desert dust, traffic film, and year-round sun, glass in Las Vegas loses clarity quickly. That is why many homeowners and businesses call in the first place.",
+          "This page explains those conditions in plain language so you know what you are dealing with before you book.",
         ],
       },
       {
         heading: "Residential, storefront, and commercial service coverage",
         paragraphs: [
-          "A top local landing page should not feel like a city-name swap. It needs to connect the market to the available services: residential window cleaning, commercial window cleaning, storefront glass cleaning, and difficult-access quote reviews.",
-          "That broader service framing helps this page support the full keyword cluster instead of only one exact match term.",
+          "A useful Las Vegas page should not feel like a city name dropped onto generic text. We connect the market to what we offer: residential window cleaning, commercial window cleaning, storefront glass cleaning, and difficult-access quote reviews.",
+          "That broader picture helps you find the right fit whether you searched for one service or several.",
         ],
       },
       {
-        heading: "Neighborhood relevance without doorway-page spam",
+        heading: "Neighborhoods we reference by name",
         paragraphs: [
-          "The page references real Las Vegas valley neighborhoods already used elsewhere on the site so the local signal stays consistent: Summerlin, Centennial Hills, Spring Valley, Southern Highlands, Enterprise, Skye Canyon, Green Valley, and Henderson.",
-          "That is enough to strengthen local relevance without publishing thin copy-spun city pages.",
+          "We reference real Las Vegas valley neighborhoods so coverage stays consistent wherever you read about us: Summerlin, Centennial Hills, Spring Valley, Southern Highlands, Enterprise, Skye Canyon, Green Valley, and Henderson.",
+          "That keeps local context honest without thin, copy-pasted city pages.",
         ],
       },
     ],

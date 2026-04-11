@@ -11,7 +11,7 @@ import { buildBreadcrumbSchema, buildPageMetadata } from "@/lib/seo";
 export const metadata = buildPageMetadata({
   title: "Window Cleaning Service Areas Las Vegas Valley",
   description:
-    "See the Las Vegas valley service areas highlighted on the site, including Las Vegas, Summerlin, Henderson, Green Valley, Centennial Hills, Southern Highlands, Spring Valley, Enterprise, and Skye Canyon.",
+    "Las Vegas valley service areas we cover, including Las Vegas, Summerlin, Henderson, Green Valley, Centennial Hills, Southern Highlands, Spring Valley, Enterprise, and Skye Canyon.",
   path: "/service-areas",
   keywords: [
     "window cleaning service areas Las Vegas",
@@ -40,8 +40,8 @@ export default async function ServiceAreasPage() {
               Local Coverage Across Las Vegas and Nearby Areas
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Local SEO works better when service-area language is consistent across the homepage, footer, schema, and supporting
-              landing pages. This section keeps those signals aligned.
+              You should see the same service areas and neighborhood names whether you start on the homepage, the footer, or a local
+              page—so there is no confusion about coverage before you call.
             </p>
             <Button asChild size="lg" className="rounded-full px-8 text-base">
               <Link href={BUSINESS.quotePath}>
@@ -64,8 +64,8 @@ export default async function ServiceAreasPage() {
                   <p className="app-kicker">Featured Area</p>
                   <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">{link.label}</h2>
                   <p className="mt-4 text-base leading-7 text-muted-foreground">
-                    Dedicated local landing-page content for the main target market, built to support ranking improvements for
-                    window cleaning Las Vegas and related local variations.
+                    A focused Las Vegas overview with neighborhood context and clear next steps when you need window cleaning in the
+                    valley.
                   </p>
                 </div>
                 <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">

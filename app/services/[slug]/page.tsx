@@ -56,7 +56,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
     ...otherServices.map((link) => ({
       href: link.href,
       label: link.label,
-      description: "Related service page within the core PureBin service cluster.",
+      description: "Related PureBin service with more detail for that property type.",
     })),
     {
       href: "/reviews",
@@ -71,7 +71,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
     {
       href: "/faq",
       label: "Window Cleaning FAQs",
-      description: "Answer hub covering pricing, service areas, and common booking questions.",
+      description: "Pricing, service areas, and common booking questions in one place.",
     },
   ];
   const hasAeoContent = Boolean(service.answerBlock && service.keyTakeaways?.length && service.aeoSections?.length);
@@ -125,7 +125,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
             <p className="max-w-3xl text-base leading-7 text-muted-foreground">{service.summary}</p>
             {service.answerBlock ? (
               <div className="max-w-3xl rounded-[1.8rem] border border-primary/15 bg-white/82 px-5 py-5 shadow-[0_16px_50px_-40px_rgba(15,23,42,0.4)]">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Answer Block</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">At a Glance</p>
                 <p className="mt-3 text-base leading-7 text-foreground">{service.answerBlock}</p>
               </div>
             ) : null}
@@ -157,7 +157,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
             <p className="app-kicker">Service Area</p>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">Local relevance across the Las Vegas valley</h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              This service page supports search visibility for {BUSINESS.primaryLocation} and nearby areas including{" "}
+              We serve {BUSINESS.primaryLocation} and nearby areas including{" "}
               {BUSINESS.serviceAreas.filter((area) => area !== "Las Vegas").join(", ")}.
             </p>
             <Button asChild variant="outline" className="mt-5 rounded-full px-6">
@@ -289,7 +289,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
             </div>
           </div>
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">{hasAeoContent ? "Suggested Internal Links" : "Related Pages"}</p>
+            <p className="app-kicker">Related Pages</p>
             <div className="mt-5 grid gap-3">
               {internalLinks.map((link) => (
                 <Link
@@ -307,7 +307,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
 
         {hasAeoContent && service.externalSources?.length ? (
           <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">Suggested External Authority Sources</p>
+            <p className="app-kicker">Helpful References</p>
             <div className="mt-5 grid gap-3">
               {service.externalSources.map((source) => (
                 <a

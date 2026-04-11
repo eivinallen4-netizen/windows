@@ -11,7 +11,7 @@ import { buildBreadcrumbSchema, buildPageMetadata, buildServiceSchema } from "@/
 export const metadata = buildPageMetadata({
   title: "Window Cleaning Services Las Vegas",
   description:
-    "Explore residential, commercial, storefront, and high-rise window cleaning content built for Las Vegas search intent and quote-first conversions.",
+    "Residential, commercial, storefront, and high-rise window cleaning in Las Vegas with clear scopes, quote-first scheduling, and approval before payment.",
   path: "/services",
   keywords: [
     "window cleaning services Las Vegas",
@@ -48,11 +48,11 @@ export default async function ServicesPage() {
           <div className="max-w-4xl space-y-5">
             <span className="app-kicker">Services</span>
             <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">
-              Window Cleaning Services Built for Las Vegas Search Intent
+              Window Cleaning Services for Las Vegas Homes and Businesses
             </h1>
             <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-              The public site now has dedicated service pages for homeowners, businesses, storefronts, and difficult-access
-              requests so Google can understand the service mix more clearly and visitors can find the right page faster.
+              Dedicated pages for homeowners, businesses, storefronts, and difficult-access jobs so you can read the right details
+              and request a quote without guessing which service fits.
             </p>
             <Button asChild size="lg" className="rounded-full px-8 text-base">
               <Link href={BUSINESS.quotePath}>
@@ -92,15 +92,15 @@ export default async function ServicesPage() {
 
         <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">What Helps Rankings</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">Why this service architecture matters</h2>
+            <p className="app-kicker">Why Separate Pages</p>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">Find the service that matches your property</h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Competitors ranking well in Las Vegas give Google more than a branded homepage. They publish service-specific
-              pages, mention commercial and residential use cases directly, and build out supporting content around service
-              categories and local intent.
+              Residential glass, storefronts, offices, and high-access buildings are not the same job. When each has its own page,
+              you see the right scope, safety notes, and expectations before you call.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              These pages give your site the same structural advantage while keeping the language original and more conversion-focused.
+              That clarity saves time for homeowners and facility managers alike—especially in a market with this much commercial and
+              mixed-use glass.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
               Serving Las Vegas since {businessInfo.servingSinceYear}. {businessInfo.callOnly ? "Call to book." : ""} {businessInfo.serviceAreaBusiness ? "No storefront at this time." : ""}
@@ -120,11 +120,11 @@ export default async function ServicesPage() {
 
         <section className="mt-10 rounded-[2.4rem] border border-primary/15 bg-[linear-gradient(135deg,rgba(11,111,178,0.12),rgba(255,255,255,0.94)_46%,rgba(56,189,248,0.12))] px-6 py-10 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.34)] sm:px-10">
           <div className="max-w-3xl space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Internal Linking</p>
-            <h2 className="text-4xl font-black tracking-tight text-foreground">Keep the service cluster tightly connected</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Explore More</p>
+            <h2 className="text-4xl font-black tracking-tight text-foreground">Related pages that round out the picture</h2>
             <p className="text-base leading-7 text-muted-foreground">
-              Every service page should link back to the homepage, the Las Vegas service-area page, reviews, before-and-after proof,
-              FAQ content, and the other core service pages. That internal structure helps both rankings and conversions.
+              Reviews, FAQs, before-and-after photos, and the Las Vegas service-area overview all add context next to these service
+              pages—so you can book with fewer open questions.
             </p>
             <div className="flex flex-wrap gap-3">
               {SERVICE_LINKS.map((link) => (

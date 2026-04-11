@@ -83,8 +83,8 @@ export default async function PricingPage() {
         <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
           <p className="app-kicker">What This Prevents</p>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            Detailed pricing content reduces weak leads, answers common objections earlier, and makes it easier for the page to rank for
-            price-related searches without turning the site into a discount page.
+            Detailed pricing guidance reduces surprises, answers common objections earlier, and keeps the focus on fair quotes instead
+            of race-to-the-bottom discount language.
           </p>
         </section>
 

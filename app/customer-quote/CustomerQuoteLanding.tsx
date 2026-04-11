@@ -453,7 +453,8 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
             Residential, commercial, storefront, and high-rise support
           </h2>
           <p className="text-base leading-7 text-muted-foreground">
-            Supporting service pages help this homepage rank better by covering the main keyword variations people search in Las Vegas.
+            Separate service pages spell out residential, commercial, storefront, and high-rise details so you can match the right page
+            to your property before you call.
           </p>
         </div>
 
@@ -555,12 +556,12 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
               Why local Las Vegas window cleaning pages matter
             </h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Valley windows deal with dust, hard water spotting, traffic film, and strong sun year-round. Local pages let the site
-              speak directly to those problems and give Google stronger service-area relevance than a generic homepage alone.
+              Valley windows deal with dust, hard water spotting, traffic film, and strong sun year-round. Local pages let us speak
+              directly to those conditions and show how we cover the neighborhoods you care about.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              We now support that with a dedicated Las Vegas service-area page and clearer internal links between services, reviews,
-              before-and-after proof, and FAQs.
+              Start with the dedicated Las Vegas service-area page, then jump to services, reviews, before-and-after photos, and FAQs
+              when you want more detail.
             </p>
             {businessInfo.callOnly || businessInfo.serviceAreaBusiness ? (
               <p className="mt-4 text-base leading-7 text-muted-foreground">

@@ -62,7 +62,7 @@ export default async function AboutPage() {
               We built this service for Las Vegas property owners who are tired of unreliable companies, inconsistent results, and vague pricing.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              The public site now explains the process more clearly for residential window cleaning, commercial window cleaning, storefront glass cleaning, and local quote requests across the valley.
+              We explain the process clearly for residential window cleaning, commercial window cleaning, storefront glass cleaning, and local quote requests across the valley.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
               Serving Las Vegas since {businessInfo.servingSinceYear}, with a service-area model that starts every job with a call instead of a storefront visit.
@@ -86,8 +86,8 @@ export default async function AboutPage() {
             <p className="app-kicker">Local Focus</p>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">Local service across the Las Vegas valley</h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Consistent local SEO works better when the business name, phone number, service areas, and city references all align. The
-              public site now keeps those details consistent around {BUSINESS.primaryLocation} and nearby areas.
+              Consistent contact details matter when you are comparing companies. We keep the business name, phone number, service
+              areas, and city references aligned around {BUSINESS.primaryLocation} and nearby areas.
             </p>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
               {businessInfo.callOnly ? "Call to book. " : ""}

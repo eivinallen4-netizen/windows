@@ -38,7 +38,7 @@ export default async function FaqPage() {
               Las Vegas Window Cleaning Questions, Answered
             </h1>
             <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Better FAQ depth helps rankings, reduces objections, and gives homeowners and business owners a clearer path to booking.
+              Straight answers reduce back-and-forth and give homeowners and business owners a clearer path to booking.
             </p>
             <Button asChild size="lg" className="rounded-full px-8 text-base">
               <Link href="/#quote-form">
