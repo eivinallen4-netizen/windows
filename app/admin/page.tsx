@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignJustify,
@@ -13,8 +15,6 @@ import {
   ExternalLink,
   Grid2x2,
   Home,
-  Mail,
-  Phone,
   ScanLine,
   Send,
   Sparkles,
@@ -128,37 +128,6 @@ const SITE_IMAGE_STORAGE_PREFIX = {
 
 type SiteImageUploadSlot = keyof typeof SITE_IMAGE_STORAGE_PREFIX;
 
-type ContactRecord = {
-  id: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  address?: string;
-  paneCounts?: {
-    standard?: number;
-    specialty?: number;
-    french?: number;
-  };
-  paneCount?: number;
-  windowCount?: number;
-  bestTimeToCall?: string;
-  homeType?: string;
-  serviceType?: string;
-  notes?: string;
-  source?: string;
-  created_at: string;
-};
-
-type ContactQuoteDraft = {
-  contactId: string;
-  user: { name: string; email: string; address: string };
-  selections: QuoteSelections;
-  serviceDate: string;
-  serviceTime: string;
-  notes: string;
-};
-
 type UserRecord = {
   id: string;
   email?: string;
@@ -204,65 +173,8 @@ type TransactionRecord = {
   created_at: string;
 };
 
-function getContactDisplayName(contact: ContactRecord) {
-  return [contact.firstName, contact.lastName].filter(Boolean).join(" ").trim() || "Unnamed";
-}
-
-function getPaneTotal(paneCounts?: ContactRecord["paneCounts"]) {
-  return Object.values(paneCounts ?? {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
-}
-
-function getContactPaneTotal(contact: ContactRecord) {
-  return getPaneTotal(contact.paneCounts) || Number(contact.paneCount ?? contact.windowCount ?? 0) || 0;
-}
-
-function getSelectionPaneTotal(selections: QuoteSelections) {
-  return getPaneTotal(selections.paneCounts);
-}
-
-function buildContactSelections(contact: ContactRecord): QuoteSelections {
-  const serviceType = contact.serviceType?.toLowerCase() ?? "";
-  const homeType = contact.homeType?.toLowerCase() ?? "";
-  const standardCount =
-    Number(contact.paneCounts?.standard ?? 0) ||
-    (contact.paneCounts ? 0 : Number(contact.paneCount ?? contact.windowCount ?? 0) || 0);
-  return {
-    paneCounts: {
-      standard: standardCount,
-      specialty: Number(contact.paneCounts?.specialty ?? 0) || 0,
-      french: Number(contact.paneCounts?.french ?? 0) || 0,
-    },
-    storyLevel: homeType.includes("two") || homeType.includes("custom") ? "3+" : "1-2",
-    addons: {
-      screen: serviceType.includes("screen"),
-      track: serviceType.includes("track"),
-      hard_water: serviceType.includes("hard"),
-      interior: serviceType.includes("inside"),
-    },
-  };
-}
-
-function buildContactDraft(contact: ContactRecord): ContactQuoteDraft {
-  return {
-    contactId: contact.id,
-    user: {
-      name: getContactDisplayName(contact),
-      email: contact.email ?? "",
-      address: contact.address ?? "",
-    },
-    selections: buildContactSelections(contact),
-    serviceDate: "",
-    serviceTime: "",
-    notes: contact.notes ?? "",
-  };
-}
-
-function isValidEmail(value: string) {
-  return /.+@.+\..+/.test(value);
-}
-
 export default function AdminPage() {
-  const LEADS_PER_PAGE = 8;
+  const pathname = usePathname();
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pricing, setPricing] = useState<Pricing>(defaultPricing);
@@ -322,76 +234,17 @@ export default function AdminPage() {
   const [emailMessage, setEmailMessage] = useState("");
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [contacts, setContacts] = useState<ContactRecord[]>([]);
-  const [contactsLoading, setContactsLoading] = useState(false);
-  const [contactsError, setContactsError] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState("");
   const [contactFirstName, setContactFirstName] = useState("");
   const [contactLastName, setContactLastName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactStatus, setContactStatus] = useState<string | null>(null);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [leadSearch, setLeadSearch] = useState("");
-  const [leadPage, setLeadPage] = useState(1);
-  const [contactDraft, setContactDraft] = useState<ContactQuoteDraft | null>(null);
-  const [contactDraftStatus, setContactDraftStatus] = useState<string | null>(null);
-  const [contactDraftError, setContactDraftError] = useState<string | null>(null);
-  const [savingContactDraft, setSavingContactDraft] = useState(false);
-  const [sendingContactQuote, setSendingContactQuote] = useState(false);
-  const [creatingPaymentLink, setCreatingPaymentLink] = useState(false);
-  const [emailingPaymentLink, setEmailingPaymentLink] = useState(false);
-  const [contactPaymentUrl, setContactPaymentUrl] = useState("");
-  const [emailLoaded, setEmailLoaded] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [usersLoaded, setUsersLoaded] = useState(false);
   const [resetConfirmation, setResetConfirmation] = useState("");
   const [resetStatus, setResetStatus] = useState<string | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resettingData, setResettingData] = useState(false);
-
-  const selectedContact = useMemo(
-    () => contacts.find((contact) => contact.id === selectedContactId) ?? null,
-    [contacts, selectedContactId]
-  );
-  const contactDraftTotals = useMemo(
-    () => (contactDraft ? computeQuote(pricing, contactDraft.selections) : null),
-    [contactDraft, pricing]
-  );
-  const filteredContacts = useMemo(() => {
-    const query = leadSearch.trim().toLowerCase();
-    if (!query) return contacts;
-    return contacts.filter((contact) =>
-      [
-        getContactDisplayName(contact),
-        contact.email ?? "",
-        contact.phone ?? "",
-        contact.address ?? "",
-        contact.source ?? "",
-      ].some((value) => value.toLowerCase().includes(query))
-    );
-  }, [contacts, leadSearch]);
-  const totalLeadPages = Math.max(1, Math.ceil(filteredContacts.length / LEADS_PER_PAGE));
-  const pagedContacts = useMemo(() => {
-    const start = (leadPage - 1) * LEADS_PER_PAGE;
-    return filteredContacts.slice(start, start + LEADS_PER_PAGE);
-  }, [filteredContacts, leadPage]);
-  const leadsWithPhone = useMemo(
-    () => contacts.filter((contact) => Boolean(contact.phone?.trim())).length,
-    [contacts]
-  );
-  const leadsWithEmail = useMemo(
-    () => contacts.filter((contact) => Boolean(contact.email?.trim())).length,
-    [contacts]
-  );
-  const recentLeads = useMemo(
-    () =>
-      contacts.filter((contact) => {
-        const createdAt = new Date(contact.created_at).getTime();
-        return Number.isFinite(createdAt) && Date.now() - createdAt < 1000 * 60 * 60 * 24 * 7;
-      }).length,
-    [contacts]
-  );
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -609,24 +462,6 @@ export default function AdminPage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const loadContacts = useCallback(async () => {
-    setContactsError(null);
-    setContactsLoading(true);
-    try {
-      const response = await fetch("/api/contacts");
-      if (!response.ok) {
-        throw new Error("Unable to load contacts.");
-      }
-      const payload = (await response.json()) as { contacts: ContactRecord[] };
-      setContacts(payload.contacts ?? []);
-    } catch (err) {
-      console.error(err);
-      setContactsError("Unable to load contacts.");
-    } finally {
-      setContactsLoading(false);
-    }
-  }, []);
-
   const loadUsers = useCallback(async () => {
     try {
       const response = await fetch("/api/users?all=true");
@@ -645,57 +480,6 @@ export default function AdminPage() {
       console.error(err);
     }
   }, []);
-
-  useEffect(() => {
-    if (!isAdmin) {
-      return;
-    }
-    if (activeSection !== "email" || emailLoaded) {
-      return;
-    }
-    void loadContacts();
-    setEmailLoaded(true);
-  }, [activeSection, emailLoaded, isAdmin, loadContacts]);
-
-  useEffect(() => {
-    if (!contacts.length) {
-      return;
-    }
-    if (selectedContactId && contacts.some((contact) => contact.id === selectedContactId)) {
-      return;
-    }
-    const first = contacts[0];
-    setSelectedContactId(first.id);
-    setContactDraft(buildContactDraft(first));
-  }, [contacts, selectedContactId]);
-
-  useEffect(() => {
-    setLeadPage(1);
-  }, [leadSearch]);
-
-  useEffect(() => {
-    setLeadPage((prev) => Math.min(prev, totalLeadPages));
-  }, [totalLeadPages]);
-
-  useEffect(() => {
-    if (!leadModalOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setLeadModalOpen(false);
-      }
-    }
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [leadModalOpen]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -764,12 +548,8 @@ export default function AdminPage() {
         throw new Error(payload.error || "Unable to create contact.");
       }
 
-      const payload = (await response.json()) as { contact: ContactRecord };
-      setContacts((prev) => [payload.contact, ...prev]);
-      setContactStatus("Contact added.");
-      setSelectedContactId(payload.contact.id);
-      setContactDraft(buildContactDraft(payload.contact));
-      setLeadModalOpen(true);
+      await response.json();
+      setContactStatus("Contact added. Open Leads to view or quote.");
       setContactEmail("");
       setContactFirstName("");
       setContactLastName("");
@@ -842,316 +622,6 @@ export default function AdminPage() {
       setTestJobError(message);
     } finally {
       setTestJobSaving(false);
-    }
-  }
-
-  function selectContact(contact: ContactRecord) {
-    setSelectedContactId(contact.id);
-    setContactDraft(buildContactDraft(contact));
-    setContactDraftStatus(null);
-    setContactDraftError(null);
-    setContactPaymentUrl("");
-    setLeadModalOpen(true);
-    if (contact.email) {
-      setEmailTo(contact.email);
-    }
-  }
-
-  function updateContactDraftUser(field: "name" | "email" | "address", value: string) {
-    setContactDraft((prev) => (prev ? { ...prev, user: { ...prev.user, [field]: value } } : prev));
-  }
-
-  function updateContactDraftPaneCount(type: PaneType, value: number) {
-    setContactDraft((prev) =>
-      prev
-        ? {
-            ...prev,
-            selections: {
-              ...prev.selections,
-              paneCounts: {
-                ...prev.selections.paneCounts,
-                [type]: Math.max(0, value),
-              },
-            },
-          }
-        : prev
-    );
-  }
-
-  function updateContactDraftStoryLevel(storyLevel: StoryLevel) {
-    setContactDraft((prev) =>
-      prev
-        ? {
-            ...prev,
-            selections: {
-              ...prev.selections,
-              storyLevel,
-            },
-          }
-        : prev
-    );
-  }
-
-  function updateContactDraftAddon(id: keyof AddOnSelection) {
-    setContactDraft((prev) =>
-      prev
-        ? {
-            ...prev,
-            selections: {
-              ...prev.selections,
-              addons: {
-                ...prev.selections.addons,
-                [id]: !prev.selections.addons[id],
-              },
-            },
-          }
-        : prev
-    );
-  }
-
-  function updateContactDraftField(field: "serviceDate" | "serviceTime" | "notes", value: string) {
-    setContactDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
-  }
-
-  async function handleSaveContactDraft() {
-    if (!selectedContact || !contactDraft) {
-      return;
-    }
-
-    setContactDraftError(null);
-    setContactDraftStatus(null);
-
-    const [firstName, ...rest] = contactDraft.user.name.trim().split(/\s+/).filter(Boolean);
-    const lastName = rest.join(" ");
-    const totalPanes = getSelectionPaneTotal(contactDraft.selections);
-
-    setSavingContactDraft(true);
-    try {
-      const response = await fetch("/api/contacts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedContact.id,
-          updates: {
-            email: contactDraft.user.email.trim() || undefined,
-            firstName: firstName || undefined,
-            lastName: lastName || undefined,
-            phone: selectedContact.phone,
-            address: contactDraft.user.address.trim() || undefined,
-            paneCounts: contactDraft.selections.paneCounts,
-            paneCount: totalPanes || undefined,
-            bestTimeToCall: selectedContact.bestTimeToCall,
-            homeType: selectedContact.homeType,
-            serviceType: selectedContact.serviceType,
-            notes: contactDraft.notes.trim() || undefined,
-            source: selectedContact.source,
-          },
-        }),
-      });
-
-      const payload = (await response.json()) as { contact?: ContactRecord; error?: string };
-      if (!response.ok || !payload.contact) {
-        throw new Error(payload.error || "Unable to update contact.");
-      }
-
-      setContacts((prev) => prev.map((contact) => (contact.id === payload.contact?.id ? payload.contact : contact)));
-      setSelectedContactId(payload.contact.id);
-      setContactDraft(buildContactDraft(payload.contact));
-      setContactDraftStatus("Lead details saved.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to update contact.";
-      setContactDraftError(message);
-    } finally {
-      setSavingContactDraft(false);
-    }
-  }
-
-  async function handleSendQuoteToContact() {
-    if (!contactDraft) {
-      return;
-    }
-
-    setContactDraftError(null);
-    setContactDraftStatus(null);
-
-    const trimmedUser = {
-      name: contactDraft.user.name.trim(),
-      email: contactDraft.user.email.trim(),
-      address: contactDraft.user.address.trim(),
-    };
-    const totalPanes = getSelectionPaneTotal(contactDraft.selections);
-    if (!trimmedUser.name || !trimmedUser.email || !trimmedUser.address) {
-      setContactDraftError("Name, email, and address are required before sending a quote.");
-      return;
-    }
-    if (!isValidEmail(trimmedUser.email)) {
-      setContactDraftError("Enter a valid email before sending a quote.");
-      return;
-    }
-    if (totalPanes <= 0) {
-      setContactDraftError("Add at least 1 pane before sending a quote.");
-      return;
-    }
-
-    const totals = computeQuote(pricing, contactDraft.selections);
-
-    setSendingContactQuote(true);
-    try {
-      const quoteResponse = await fetch("/api/quotes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: trimmedUser,
-          selections: contactDraft.selections,
-          totals,
-        }),
-      });
-      const quotePayload = (await quoteResponse.json()) as { error?: string };
-      if (!quoteResponse.ok) {
-        throw new Error(quotePayload.error || "Unable to save quote.");
-      }
-
-      const emailResponse = await fetch("/api/send-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: trimmedUser,
-          selections: contactDraft.selections,
-          totals,
-        }),
-      });
-      const emailPayload = (await emailResponse.json()) as { error?: string };
-      if (!emailResponse.ok) {
-        throw new Error(emailPayload.error || "Quote saved, but email failed.");
-      }
-
-      setEmailTo(trimmedUser.email);
-      setContactDraftStatus(`Quote saved and emailed to ${trimmedUser.email}.`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to send quote.";
-      setContactDraftError(message);
-    } finally {
-      setSendingContactQuote(false);
-    }
-  }
-
-  async function createCheckoutLinkForContact() {
-    if (!contactDraft) {
-      throw new Error("No lead selected.");
-    }
-
-    const trimmedUser = {
-      name: contactDraft.user.name.trim(),
-      email: contactDraft.user.email.trim(),
-      address: contactDraft.user.address.trim(),
-    };
-    const totalPanes = Object.values(contactDraft.selections.paneCounts).reduce((sum, count) => sum + count, 0);
-    if (!trimmedUser.name || !trimmedUser.email || !trimmedUser.address) {
-      throw new Error("Name, email, and address are required before creating a payment link.");
-    }
-    if (!isValidEmail(trimmedUser.email)) {
-      throw new Error("Enter a valid email before creating a payment link.");
-    }
-    if (totalPanes <= 0) {
-      throw new Error("Add at least 1 pane before creating a payment link.");
-    }
-    if (!contactDraft.serviceDate || !contactDraft.serviceTime) {
-      throw new Error("Service date and time are required before creating a payment link.");
-    }
-
-    const response = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user: trimmedUser,
-        selections: contactDraft.selections,
-        serviceDate: contactDraft.serviceDate,
-        serviceTime: contactDraft.serviceTime,
-      }),
-    });
-    const payload = (await response.json()) as { url?: string; error?: string };
-    if (!response.ok || !payload.url) {
-      throw new Error(payload.error || "Unable to create payment link.");
-    }
-    setContactPaymentUrl(payload.url);
-    return payload.url;
-  }
-
-  async function handleCreatePaymentLink(openInNewTab = false) {
-    setContactDraftError(null);
-    setContactDraftStatus(null);
-    setCreatingPaymentLink(true);
-    try {
-      const url = await createCheckoutLinkForContact();
-      if (openInNewTab) {
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
-      setContactDraftStatus("Payment link created.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to create payment link.";
-      setContactDraftError(message);
-    } finally {
-      setCreatingPaymentLink(false);
-    }
-  }
-
-  async function handleEmailPaymentLink() {
-    if (!contactDraft) {
-      return;
-    }
-
-    setContactDraftError(null);
-    setContactDraftStatus(null);
-    setEmailingPaymentLink(true);
-    try {
-      const url = contactPaymentUrl || (await createCheckoutLinkForContact());
-      const totals = computeQuote(pricing, contactDraft.selections);
-      const message = [
-        `Hi ${contactDraft.user.name || "there"},`,
-        "",
-        "Here is your PureBin LV payment link.",
-        `Service date: ${contactDraft.serviceDate}`,
-        `Service time: ${contactDraft.serviceTime}`,
-        `Total: $${totals.total.toLocaleString()}`,
-        "",
-        `Pay here: ${url}`,
-        "",
-        "Reply to this email or call us if you need anything changed.",
-      ].join("\n");
-
-      const response = await fetch("/api/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: contactDraft.user.email.trim(),
-          subject: "PureBin LV payment link",
-          message,
-        }),
-      });
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error || "Unable to email payment link.");
-      }
-
-      setEmailTo(contactDraft.user.email.trim());
-      setContactDraftStatus(`Payment link emailed to ${contactDraft.user.email.trim()}.`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to email payment link.";
-      setContactDraftError(message);
-    } finally {
-      setEmailingPaymentLink(false);
-    }
-  }
-
-  async function handleCopyPaymentLink() {
-    if (!contactPaymentUrl) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(contactPaymentUrl);
-      setContactDraftStatus("Payment link copied.");
-    } catch {
-      setContactDraftError("Unable to copy payment link.");
     }
   }
 
@@ -1417,8 +887,6 @@ export default function AdminPage() {
       setJobsError(null);
       setTransactions([]);
       setTransactionsError(null);
-      setContacts([]);
-      setContactsError(null);
       setTestJobStatus(null);
       setTestJobError(null);
       setContactStatus(null);
@@ -1769,7 +1237,7 @@ export default function AdminPage() {
     { id: "pricing", label: "Pricing" },
     { id: "business", label: "Business" },
     { id: "addons", label: "Add-ons" },
-    { id: "email", label: "Leads" },
+    { id: "email", label: "Email" },
     { id: "users", label: "Users" },
     { id: "danger", label: "Reset DB" },
   ] as const;
@@ -1826,26 +1294,47 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-6 space-y-1">
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                activeSection === item.id
-                  ? "text-white"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-              style={
-                activeSection === item.id
-                  ? { background: `linear-gradient(135deg, ${COLORS.indigo} 0%, #4f46e5 100%)` }
-                  : {}
-              }
-            >
-              {item.label}
-            </button>
-          ))}
+        <nav className="flex-1 space-y-1 px-3 py-6">
+          {tabs.flatMap((item) => {
+            const sectionButton = (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveSection(item.id)}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
+                  activeSection === item.id
+                    ? "text-white"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                style={
+                  activeSection === item.id
+                    ? { background: `linear-gradient(135deg, ${COLORS.indigo} 0%, #4f46e5 100%)` }
+                    : {}
+                }
+              >
+                {item.label}
+              </button>
+            );
+            if (item.id !== "email") {
+              return [sectionButton];
+            }
+            const leadsActive = pathname.startsWith("/admin/leads");
+            return [
+              sectionButton,
+              <Link
+                key="admin-leads-nav"
+                href="/admin/leads"
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                  leadsActive ? "text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                style={
+                  leadsActive ? { background: `linear-gradient(135deg, ${COLORS.indigo} 0%, #4f46e5 100%)` } : {}
+                }
+              >
+                Leads
+              </Link>,
+            ];
+          })}
         </nav>
 
         <div className="px-6 py-5 border-t" style={{ borderColor: COLORS.borderDark }}>
@@ -1862,17 +1351,36 @@ export default function AdminPage() {
           className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t px-1 py-1"
           style={{ background: COLORS.sidebar, borderColor: COLORS.borderDark }}
         >
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-xs rounded-lg transition-all ${
-                activeSection === item.id ? "text-indigo-500" : "text-slate-500"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          {tabs.flatMap((item) => {
+            const sectionButton = (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveSection(item.id)}
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg py-2 text-xs transition-all ${
+                  activeSection === item.id ? "text-indigo-500" : "text-slate-500"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+            if (item.id !== "email") {
+              return [sectionButton];
+            }
+            const leadsActive = pathname.startsWith("/admin/leads");
+            return [
+              sectionButton,
+              <Link
+                key="admin-leads-nav-mobile"
+                href="/admin/leads"
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg py-2 text-xs transition-all ${
+                  leadsActive ? "text-indigo-500" : "text-slate-500"
+                }`}
+              >
+                Leads
+              </Link>,
+            ];
+          })}
         </div>
 
         <div className="flex-1 overflow-auto pb-20 md:pb-0">
@@ -2290,396 +1798,133 @@ export default function AdminPage() {
           {activeSection === "email" ? (
           <div className="grid gap-6">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold">Email + Leads</h2>
+                  <h2 className="text-lg font-semibold">Email</h2>
                   <p className="text-sm text-slate-600">
-                    Send messages, sort form submits, and open a focused quote workspace when you need it.
+                    Send messages from the admin panel. Open a lead to see submitted details and run quotes or payment links.
                   </p>
                 </div>
+                <Button asChild className="shrink-0 rounded-full">
+                  <Link href="/admin/leads">View all leads</Link>
+                </Button>
               </div>
               <div className="grid gap-6 lg:grid-cols-[0.9fr,1.1fr]">
-            <Card className="border border-slate-200 bg-white text-slate-900">
-              <CardHeader>
-                <CardTitle>Compose</CardTitle>
-                <CardDescription>Send via SMTP (Brevo).</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-                    <span className="text-xs font-semibold text-slate-600">To</span>
-                    <input
-                      className="w-full bg-transparent text-sm outline-none"
-                      type="email"
-                      value={emailTo}
-                      onChange={(event) => setEmailTo(event.target.value)}
-                      placeholder="name@example.com"
-                    />
-                  </div>
-                  <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-                    <span className="text-xs font-semibold text-slate-600">Subject</span>
-                    <input
-                      className="w-full bg-transparent text-sm outline-none"
-                      value={emailSubject}
-                      onChange={(event) => setEmailSubject(event.target.value)}
-                      placeholder="Subject"
-                    />
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <Textarea
-                      id="email-message"
-                      rows={10}
-                      value={emailMessage}
-                      onChange={(event) => setEmailMessage(event.target.value)}
-                      placeholder="Write your message..."
-                      className="min-h-[220px] border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button type="button" onClick={handleSendEmail} disabled={sendingEmail} className="rounded-full">
-                    {sendingEmail ? "Sending..." : "Send"}
-                  </Button>
-                  {emailStatus ? <p className="text-sm text-slate-600">{emailStatus}</p> : null}
-                </div>
-              </CardContent>
-            </Card>
-
-              <Card className="border border-slate-200 bg-white text-slate-900">
-                <CardHeader>
-                  <CardTitle>Landing Page Leads</CardTitle>
-                  <CardDescription>Review every form submit, then call, email, quote, or send payment from one place.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="contact-email">Email</Label>
-                      <Input
-                        id="contact-email"
-                        type="email"
-                        value={contactEmail}
-                        onChange={(event) => setContactEmail(event.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="contact-first">First name</Label>
-                      <Input
-                        id="contact-first"
-                        value={contactFirstName}
-                        onChange={(event) => setContactFirstName(event.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="contact-last">Last name</Label>
-                      <Input
-                        id="contact-last"
-                        value={contactLastName}
-                        onChange={(event) => setContactLastName(event.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="contact-phone">Phone</Label>
-                      <Input
-                        id="contact-phone"
-                        value={contactPhone}
-                        onChange={(event) => setContactPhone(event.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button type="button" onClick={handleCreateContact} className="rounded-full">
-                      Add Contact
-                    </Button>
-                    {contactStatus ? <p className="text-sm text-slate-600">{contactStatus}</p> : null}
-                  </div>
-
-                  <Separator />
-
-                  {contactsError ? <p className="text-sm text-destructive">{contactsError}</p> : null}
-                  {contactsLoading ? (
-                    <p className="text-sm text-slate-600">Loading contacts...</p>
-                  ) : contacts.length === 0 ? (
-                    <p className="text-sm text-slate-600">No contacts saved yet.</p>
-                  ) : (
+                <Card className="border border-slate-200 bg-white text-slate-900">
+                  <CardHeader>
+                    <CardTitle>Compose</CardTitle>
+                    <CardDescription>Send via SMTP (Brevo).</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="grid gap-3">
-                      {contacts.map((contact) => (
-                        <button
-                          key={contact.id}
-                          type="button"
-                          onClick={() => selectContact(contact)}
-                          className={`rounded-xl border p-4 text-left transition ${
-                            selectedContactId === contact.id
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold">{getContactDisplayName(contact)}</p>
-                              <p className="mt-1 text-xs text-slate-600">{contact.email || "No email yet"}</p>
-                              {contact.phone ? <p className="text-xs text-slate-600">{contact.phone}</p> : null}
-                              {contact.address ? <p className="mt-1 text-xs text-slate-600">{contact.address}</p> : null}
-                            </div>
-                            <div className="text-right">
-                              {contact.source ? (
-                                <Badge variant="secondary" className="mb-2">
-                                  {contact.source}
-                                </Badge>
-                              ) : null}
-                              <p className="text-xs text-slate-600">{new Date(contact.created_at).toLocaleString()}</p>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {contact.paneCount ? (
-                              <Badge variant="outline">{contact.paneCount} panes</Badge>
-                            ) : null}
-                            {contact.bestTimeToCall ? (
-                              <Badge variant="outline">Call: {contact.bestTimeToCall}</Badge>
-                            ) : null}
-                            {contact.serviceType ? (
-                              <Badge variant="outline">{contact.serviceType}</Badge>
-                            ) : null}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {selectedContact && contactDraft ? (
-                    <>
-                      <Separator />
-
-                      <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-base font-semibold">{getContactDisplayName(selectedContact)}</p>
-                            <p className="text-sm text-slate-600">Lead workspace</p>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedContact.phone ? (
-                              <Button asChild type="button" variant="outline" size="sm">
-                                <a href={`tel:${selectedContact.phone.replace(/\D/g, "")}`}>
-                                  <Phone className="size-4" />
-                                  Call
-                                </a>
-                              </Button>
-                            ) : null}
-                            {selectedContact.email ? (
-                              <Button asChild type="button" variant="outline" size="sm">
-                                <a href={`mailto:${selectedContact.email}`}>
-                                  <Mail className="size-4" />
-                                  Email
-                                </a>
-                              </Button>
-                            ) : null}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                if (contactDraft.user.email) {
-                                  setEmailTo(contactDraft.user.email);
-                                }
-                                setEmailSubject(`PureBin LV follow-up for ${contactDraft.user.name || getContactDisplayName(selectedContact)}`);
-                              }}
-                            >
-                              <Send className="size-4" />
-                              Use In Composer
-                            </Button>
-                          </div>
-                        </div>
-
-                        {contactDraftError ? <p className="text-sm text-destructive">{contactDraftError}</p> : null}
-                        {contactDraftStatus ? <p className="text-sm text-slate-600">{contactDraftStatus}</p> : null}
-
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor="lead-name">Name</Label>
-                            <Input
-                              id="lead-name"
-                              value={contactDraft.user.name}
-                              onChange={(event) => updateContactDraftUser("name", event.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lead-email">Email</Label>
-                            <Input
-                              id="lead-email"
-                              type="email"
-                              value={contactDraft.user.email}
-                              onChange={(event) => updateContactDraftUser("email", event.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="lead-address">Address</Label>
-                            <Input
-                              id="lead-address"
-                              value={contactDraft.user.address}
-                              onChange={(event) => updateContactDraftUser("address", event.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lead-date">Service date</Label>
-                            <Input
-                              id="lead-date"
-                              type="date"
-                              value={contactDraft.serviceDate}
-                              onChange={(event) => updateContactDraftField("serviceDate", event.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lead-time">Service time</Label>
-                            <Input
-                              id="lead-time"
-                              type="time"
-                              value={contactDraft.serviceTime}
-                              onChange={(event) => updateContactDraftField("serviceTime", event.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label htmlFor="lead-notes">Notes</Label>
-                            <Textarea
-                              id="lead-notes"
-                              rows={3}
-                              value={contactDraft.notes}
-                              onChange={(event) => updateContactDraftField("notes", event.target.value)}
-                            />
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label>Pane counts</Label>
-                              <div className="space-y-2">
-                                {paneTypeOptions.map((option) => (
-                                  <div key={option.id} className="flex items-center justify-between gap-2">
-                                    <span className="text-sm">{option.label}</span>
-                                    <Input
-                                      type="number"
-                                      min={0}
-                                      value={contactDraft.selections.paneCounts?.[option.id] ?? 0}
-                                      onChange={(event) => updateContactDraftPaneCount(option.id, Number(event.target.value) || 0)}
-                                      className="w-24"
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              {storyOptions.map((option) => {
-                                const Icon = option.icon;
-                                const active = contactDraft.selections.storyLevel === option.id;
-                                return (
-                                  <Button
-                                    key={option.id}
-                                    type="button"
-                                    variant={active ? "default" : "outline"}
-                                    className="h-10 justify-start gap-2"
-                                    onClick={() => updateContactDraftStoryLevel(option.id)}
-                                  >
-                                    <Icon className="size-4" />
-                                    <span className="text-sm">{option.label}</span>
-                                  </Button>
-                                );
-                              })}
-                            </div>
-
-                            <div className="grid gap-2">
-                              {addonRows.map((row) => {
-                                const Icon = row.icon;
-                                const active = contactDraft.selections.addons[row.id];
-                                const included = includedAddons[row.id];
-                                return (
-                                  <Button
-                                    key={row.id}
-                                    type="button"
-                                    variant={active || included ? "default" : "outline"}
-                                    className="h-10 justify-start gap-2"
-                                    disabled={included}
-                                    onClick={() => updateContactDraftAddon(row.id)}
-                                  >
-                                    <Icon className="size-4" />
-                                    <span className="text-sm">{row.label}</span>
-                                    {included ? (
-                                      <Badge variant="secondary" className="ml-auto">
-                                        Free
-                                      </Badge>
-                                    ) : null}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
-                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Lead details</p>
-                              <div className="mt-3 grid gap-2 text-sm text-slate-700">
-                                <p>Phone: {selectedContact.phone || "None yet"}</p>
-                                <p>Best time: {selectedContact.bestTimeToCall || "Not set"}</p>
-                                <p>Home type: {selectedContact.homeType || "Not set"}</p>
-                                <p>Requested: {selectedContact.serviceType || "Not set"}</p>
-                              </div>
-                            </div>
-
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
-                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Quote total</p>
-                              <p className="mt-2 text-3xl font-semibold">
-                                ${contactDraftTotals?.total.toLocaleString() || "0"}
-                              </p>
-                              <p className="mt-2 text-sm text-slate-600">
-                                {Object.values(contactDraft.selections.paneCounts).reduce((sum, count) => sum + count, 0)} panes
-                              </p>
-                              {contactDraftTotals?.minimumApplied ? (
-                                <p className="mt-2 text-xs text-slate-500">Minimum job charge applied.</p>
-                              ) : null}
-                            </div>
-
-                            <div className="grid gap-2">
-                              <Button type="button" variant="outline" onClick={handleSaveContactDraft} disabled={savingContactDraft}>
-                                {savingContactDraft ? "Saving lead..." : "Save Lead Details"}
-                              </Button>
-                              <Button type="button" onClick={handleSendQuoteToContact} disabled={sendingContactQuote}>
-                                {sendingContactQuote ? "Sending quote..." : "Save + Email Quote"}
-                              </Button>
-                              <Button type="button" variant="secondary" onClick={() => void handleCreatePaymentLink(true)} disabled={creatingPaymentLink}>
-                                {creatingPaymentLink ? "Creating link..." : "Create Payment Link"}
-                              </Button>
-                              <Button type="button" variant="outline" onClick={handleEmailPaymentLink} disabled={emailingPaymentLink}>
-                                {emailingPaymentLink ? "Emailing link..." : "Email Payment Link"}
-                              </Button>
-                            </div>
-
-                            {contactPaymentUrl ? (
-                              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Latest payment link</p>
-                                <p className="mt-2 break-all text-sm text-slate-700">{contactPaymentUrl}</p>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                  <Button type="button" size="sm" variant="outline" onClick={() => void handleCopyPaymentLink()}>
-                                    <Copy className="size-4" />
-                                    Copy
-                                  </Button>
-                                  <Button asChild type="button" size="sm" variant="outline">
-                                    <a href={contactPaymentUrl} target="_blank" rel="noreferrer">
-                                      <ExternalLink className="size-4" />
-                                      Open
-                                    </a>
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                        <span className="text-xs font-semibold text-slate-600">To</span>
+                        <input
+                          className="w-full bg-transparent text-sm outline-none"
+                          type="email"
+                          value={emailTo}
+                          onChange={(event) => setEmailTo(event.target.value)}
+                          placeholder="name@example.com"
+                        />
                       </div>
-                    </>
-                  ) : null}
-                </CardContent>
-              </Card>
+                      <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                        <span className="text-xs font-semibold text-slate-600">Subject</span>
+                        <input
+                          className="w-full bg-transparent text-sm outline-none"
+                          value={emailSubject}
+                          onChange={(event) => setEmailSubject(event.target.value)}
+                          placeholder="Subject"
+                        />
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <Textarea
+                          id="email-message"
+                          rows={10}
+                          value={emailMessage}
+                          onChange={(event) => setEmailMessage(event.target.value)}
+                          placeholder="Write your message..."
+                          className="min-h-[220px] border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button type="button" onClick={handleSendEmail} disabled={sendingEmail} className="rounded-full">
+                        {sendingEmail ? "Sending..." : "Send"}
+                      </Button>
+                      {emailStatus ? <p className="text-sm text-slate-600">{emailStatus}</p> : null}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-slate-200 bg-white text-slate-900">
+                  <CardHeader>
+                    <CardTitle>Add contact</CardTitle>
+                    <CardDescription>
+                      Manually add someone to your leads list. Form submissions appear automatically under{" "}
+                      <Link href="/admin/leads" className="font-medium text-primary underline-offset-4 hover:underline">
+                        Leads
+                      </Link>
+                      .
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="contact-email">Email</Label>
+                        <Input
+                          id="contact-email"
+                          type="email"
+                          value={contactEmail}
+                          onChange={(event) => setContactEmail(event.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-first">First name</Label>
+                        <Input
+                          id="contact-first"
+                          value={contactFirstName}
+                          onChange={(event) => setContactFirstName(event.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-last">Last name</Label>
+                        <Input
+                          id="contact-last"
+                          value={contactLastName}
+                          onChange={(event) => setContactLastName(event.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="contact-phone">Phone</Label>
+                        <Input
+                          id="contact-phone"
+                          value={contactPhone}
+                          onChange={(event) => setContactPhone(event.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Button type="button" onClick={handleCreateContact} className="rounded-full">
+                        Add contact
+                      </Button>
+                      {contactStatus ? <p className="text-sm text-slate-600">{contactStatus}</p> : null}
+                    </div>
+
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
+                      <p className="text-sm font-medium text-slate-900">Review submissions</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Each lead opens on its own page with clear read-only fields and the quote workspace.
+                      </p>
+                      <Button asChild type="button" variant="outline" className="mt-3 rounded-full bg-white">
+                        <Link href="/admin/leads">
+                          <ExternalLink className="mr-2 size-4" />
+                          Open leads
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

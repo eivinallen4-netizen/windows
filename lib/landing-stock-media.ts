@@ -32,7 +32,7 @@ export const LANDING_GALLERY_STRIP = [
 ] as const;
 
 export const LANDING_ACCENT_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1600607687644-c7171b424998?auto=format&fit=crop&w=1400&q=80",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=80",
   "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1400&q=80",
   "https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?auto=format&fit=crop&w=1400&q=80",
 ] as const;
