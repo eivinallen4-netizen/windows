@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
+import { getPublicPageStockHero } from "@/lib/landing-stock-media";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { buildBreadcrumbSchema, buildPageMetadata } from "@/lib/seo";
 
@@ -29,9 +32,10 @@ const reassurances = [
 
 export default async function PricingPage() {
   const businessInfo = await readPublicBusinessSnapshot();
+  const hero = getPublicPageStockHero("pricing");
 
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       <JsonLd
         data={buildBreadcrumbSchema([
           { name: "Home", path: "/" },
@@ -56,6 +60,7 @@ export default async function PricingPage() {
               </Link>
             </Button>
           </div>
+          <PublicStockHeroImage {...hero} className="mt-8 max-w-3xl" priority />
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
@@ -113,6 +118,6 @@ export default async function PricingPage() {
         </section>
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

@@ -9,6 +9,10 @@ import {
 
 export const DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/purebinwindowclean/";
 
+const MAX_MEDIA_URL_LEN = 2048;
+const MAX_SERVICE_SECTION_IMAGES = 12;
+const MAX_RANDOM_BACKGROUNDS = 24;
+
 export type PublicBusinessConfig = {
   servingSinceYear: number;
   publishedHours: WeeklyAllowedWindows;
@@ -19,6 +23,14 @@ export type PublicBusinessConfig = {
   gbpUrl?: string;
   sameAsLinks: string[];
   commercialProofEnabled: boolean;
+  /** Stored ref: `r2:…`, `/uploads/…`, or `https://` image URL. */
+  heroBackgroundImageUrl: string;
+  /** Subtle full-page backdrop behind public content. */
+  pageBackdropImageUrl: string;
+  /** Shown on the homepage services / gallery strip. */
+  serviceSectionImageUrls: string[];
+  /** Pool; one image is picked per page load (client) for an accent section. */
+  randomBackgroundImageUrls: string[];
 };
 
 export const defaultPublicBusinessConfig: PublicBusinessConfig = {
@@ -31,6 +43,10 @@ export const defaultPublicBusinessConfig: PublicBusinessConfig = {
   gbpUrl: "",
   sameAsLinks: [DEFAULT_INSTAGRAM_URL],
   commercialProofEnabled: false,
+  heroBackgroundImageUrl: "",
+  pageBackdropImageUrl: "",
+  serviceSectionImageUrls: [],
+  randomBackgroundImageUrls: [],
 };
 
 function isNumber(value: unknown): value is number {
@@ -53,6 +69,43 @@ function normalizeSameAsLinks(value: unknown) {
   return Array.from(deduped);
 }
 
+function normalizeStoredMediaUrl(raw: unknown): string {
+  const trimmed = String(raw ?? "").trim().slice(0, MAX_MEDIA_URL_LEN);
+  if (!trimmed) {
+    return "";
+  }
+  if (trimmed.startsWith("r2:")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/uploads/") || trimmed.startsWith("/api/files")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("https://") || trimmed.startsWith("http://")) {
+    return trimmed;
+  }
+  return "";
+}
+
+function normalizeStoredMediaUrlList(raw: unknown, maxItems: number): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const entry of raw) {
+    const url = normalizeStoredMediaUrl(entry);
+    if (!url || seen.has(url)) {
+      continue;
+    }
+    seen.add(url);
+    out.push(url);
+    if (out.length >= maxItems) {
+      break;
+    }
+  }
+  return out;
+}
+
 export function normalizePublicBusinessConfig(
   value: Partial<PublicBusinessConfig> | null | undefined,
   fallbackHours: WeeklyAllowedWindows = defaultWeeklyAllowedWindows,
@@ -70,6 +123,20 @@ export function normalizePublicBusinessConfig(
     gbpUrl: String(value?.gbpUrl ?? "").trim(),
     sameAsLinks: normalizeSameAsLinks(value?.sameAsLinks),
     commercialProofEnabled: value?.commercialProofEnabled ?? defaultPublicBusinessConfig.commercialProofEnabled,
+    heroBackgroundImageUrl:
+      normalizeStoredMediaUrl(value?.heroBackgroundImageUrl) ||
+      defaultPublicBusinessConfig.heroBackgroundImageUrl,
+    pageBackdropImageUrl:
+      normalizeStoredMediaUrl(value?.pageBackdropImageUrl) ||
+      defaultPublicBusinessConfig.pageBackdropImageUrl,
+    serviceSectionImageUrls: normalizeStoredMediaUrlList(
+      value?.serviceSectionImageUrls,
+      MAX_SERVICE_SECTION_IMAGES,
+    ),
+    randomBackgroundImageUrls: normalizeStoredMediaUrlList(
+      value?.randomBackgroundImageUrls,
+      MAX_RANDOM_BACKGROUNDS,
+    ),
   };
 }
 

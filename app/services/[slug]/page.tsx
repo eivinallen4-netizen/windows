@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { CommercialProofSection } from "@/components/commercial-proof-section";
 import { Button } from "@/components/ui/button";
 import { commercialProofItems } from "@/lib/commercial-proof";
+import { LANDING_FORM_HEADER_IMAGE, landingServiceImageForSlug } from "@/lib/landing-stock-media";
 import { BUSINESS, SERVICE_LINKS, SERVICE_PAGES } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import {
@@ -99,8 +103,11 @@ export default async function ServicePage({ params }: ServicePageProps) {
       : []),
   ];
 
+  const serviceHeroSrc = landingServiceImageForSlug(service.slug);
+  const serviceHeroAlt = `${service.shortLabel} window cleaning — example property`;
+
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       {schemas.map((schema, index) => (
         <JsonLd key={index} data={schema} />
       ))}
@@ -138,6 +145,26 @@ export default async function ServicePage({ params }: ServicePageProps) {
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-stretch">
+          <PublicStockHeroImage
+            src={serviceHeroSrc}
+            alt={serviceHeroAlt}
+            className="max-h-[min(44vh,24rem)] w-full lg:min-h-[16rem]"
+            sizes="(max-width: 1024px) 100vw, 65vw"
+            priority
+          />
+          <div className="relative hidden min-h-[12rem] overflow-hidden rounded-[2rem] border border-white/80 bg-slate-200 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)] lg:block">
+            <Image
+              src={LANDING_FORM_HEADER_IMAGE}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 0vw, 32vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-sky-300/20" aria-hidden />
           </div>
         </section>
 
@@ -326,6 +353,6 @@ export default async function ServicePage({ params }: ServicePageProps) {
         ) : null}
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

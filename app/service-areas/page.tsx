@@ -1,9 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
+import { getPublicPageStockHero, PUBLIC_SERVICE_AREA_HUB_CARD_IMAGE } from "@/lib/landing-stock-media";
 import { BUSINESS, SERVICE_AREA_LINKS } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { buildBreadcrumbSchema, buildPageMetadata } from "@/lib/seo";
@@ -22,9 +26,10 @@ export const metadata = buildPageMetadata({
 
 export default async function ServiceAreasPage() {
   const businessInfo = await readPublicBusinessSnapshot();
+  const hero = getPublicPageStockHero("serviceAreas");
 
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       <JsonLd
         data={buildBreadcrumbSchema([
           { name: "Home", path: "/" },
@@ -50,6 +55,7 @@ export default async function ServiceAreasPage() {
               </Link>
             </Button>
           </div>
+          <PublicStockHeroImage {...hero} className="mt-8 max-w-4xl" priority />
         </section>
 
         <section className="mt-8 grid gap-5 lg:grid-cols-2">
@@ -57,9 +63,19 @@ export default async function ServiceAreasPage() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)] transition hover:border-primary/30"
+              className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)] transition hover:border-primary/30"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="relative h-40 w-full bg-slate-200">
+                <Image
+                  src={PUBLIC_SERVICE_AREA_HUB_CARD_IMAGE}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" aria-hidden />
+              </div>
+              <div className="flex items-start justify-between gap-4 px-6 py-7">
                 <div>
                   <p className="app-kicker">Featured Area</p>
                   <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">{link.label}</h2>
@@ -68,7 +84,7 @@ export default async function ServiceAreasPage() {
                     valley.
                   </p>
                 </div>
-                <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <MapPin className="size-5" />
                 </span>
               </div>
@@ -88,6 +104,6 @@ export default async function ServiceAreasPage() {
         </section>
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

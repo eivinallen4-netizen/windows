@@ -33,10 +33,19 @@ function isValidEmail(value: string) {
   return /.+@.+\..+/.test(value);
 }
 
+function getBrevoApiKey() {
+  return (
+    process.env.BREVO_API_KEY?.trim() ||
+    process.env.BREVO_KEY?.trim() ||
+    process.env.key_brovo?.trim() ||
+    ""
+  );
+}
+
 async function createBrevoContact(payload: ContactPayload) {
-  const apiKey = process.env.key_brovo;
+  const apiKey = getBrevoApiKey();
   if (!apiKey) {
-    throw new Error("Missing Brevo API key.");
+    throw new Error("Missing Brevo API key (set BREVO_API_KEY).");
   }
 
   const attributes: Record<string, string> = {};

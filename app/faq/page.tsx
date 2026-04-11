@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
+import { getPublicPageStockHero } from "@/lib/landing-stock-media";
 import { CORE_FAQS } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { buildBreadcrumbSchema, buildFAQSchema, buildPageMetadata } from "@/lib/seo";
@@ -19,9 +22,10 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default async function FaqPage() {
   const businessInfo = await readPublicBusinessSnapshot();
+  const hero = getPublicPageStockHero("faq");
 
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       <JsonLd data={buildFAQSchema(CORE_FAQS)} />
       <JsonLd
         data={buildBreadcrumbSchema([
@@ -47,6 +51,7 @@ export default async function FaqPage() {
               </Link>
             </Button>
           </div>
+          <PublicStockHeroImage {...hero} className="mt-8 max-w-3xl" priority />
         </section>
 
         <section className="mt-8 grid gap-4">
@@ -75,6 +80,6 @@ export default async function FaqPage() {
         </section>
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

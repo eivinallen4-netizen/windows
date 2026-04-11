@@ -3,8 +3,16 @@ import { BUSINESS, PRIMARY_KEYWORDS } from "@/lib/marketing-content";
 import { buildOpeningHoursSpecification, type PublicBusinessConfig } from "@/lib/public-business";
 import type { Review } from "@/lib/reviews";
 
+function normalizeSiteUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, "")}`;
+}
+
 export function getMetadataBase() {
-  const configuredUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  const configuredRaw = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+  const configuredUrl = normalizeSiteUrl(configuredRaw);
   const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
   const siteUrl =
     configuredUrl && !configuredUrl.includes("localhost")

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -22,6 +22,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/star-rating";
+import {
+  LANDING_ACCENT_BACKGROUNDS,
+  LANDING_HERO_IMAGE,
+  LANDING_INCLUDED_IMAGES,
+  landingServiceImageForSlug,
+} from "@/lib/landing-stock-media";
 import { BUSINESS, CORE_FAQS, SERVICE_PAGES } from "@/lib/marketing-content";
 import type { Review } from "@/lib/reviews";
 
@@ -40,15 +46,20 @@ type CustomerQuoteLandingProps = {
     phoneDisplay: string;
     primaryLocation: string;
     serviceAreas: readonly string[];
+    heroBackgroundImageUrl?: string;
+    pageBackdropImageUrl?: string;
+    serviceSectionImageUrls?: readonly string[];
+    randomBackgroundImageUrls?: readonly string[];
   };
 };
 
 type LeadFormState = {
-  firstName: string;
-  lastName: string;
+  contactFullName: string;
   email: string;
   phone: string;
   address: string;
+  /** Primary hero field; maps to pane counts unless optional breakdown is used. */
+  estimatedPanes: string;
   bestTimeToCall: string;
   homeType: string;
   paneCounts: {
@@ -60,11 +71,11 @@ type LeadFormState = {
 };
 
 const initialState: LeadFormState = {
-  firstName: "",
-  lastName: "",
+  contactFullName: "",
   email: "",
   phone: "",
   address: "",
+  estimatedPanes: "",
   bestTimeToCall: "As soon as possible",
   homeType: "Single-story home",
   paneCounts: {
@@ -74,6 +85,13 @@ const initialState: LeadFormState = {
   },
   serviceType: "Inside and out",
 };
+
+function splitContactName(full: string) {
+  const tokens = full.trim().split(/\s+/).filter(Boolean);
+  const firstName = tokens[0] ?? "";
+  const lastName = tokens.slice(1).join(" ");
+  return { firstName, lastName };
+}
 
 const paneFieldOptions = [
   { id: "standard", label: "Standard panes", placeholder: "16" },
@@ -98,11 +116,35 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [accentBackgroundUrl, setAccentBackgroundUrl] = useState<string | null>(null);
+
+  const heroBg = businessInfo.heroBackgroundImageUrl?.trim() ?? "";
+  /** Single full-viewport hero photo: admin override or default stock image (no duplicate inline hero). */
+  const heroBackdropSrc = heroBg || LANDING_HERO_IMAGE;
+  const pageBackdrop = businessInfo.pageBackdropImageUrl?.trim() ?? "";
+
+  const randomPoolKey = useMemo(() => {
+    const admin = (businessInfo.randomBackgroundImageUrls ?? []).filter(Boolean);
+    const pool = admin.length > 0 ? admin : [...LANDING_ACCENT_BACKGROUNDS];
+    return pool.join("\u0001");
+  }, [businessInfo.randomBackgroundImageUrls]);
+
+  useEffect(() => {
+    if (!randomPoolKey) {
+      setAccentBackgroundUrl(null);
+      return;
+    }
+    const pool = randomPoolKey.split("\u0001").filter(Boolean);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setAccentBackgroundUrl(pick || null);
+  }, [randomPoolKey]);
 
   const comparisonReviews = reviews.filter((review) => review.houseAfterPhotoUrl).slice(0, 3);
   const featuredReviews = (reviews.filter((review) => review.testimonial).slice(0, 3).length
     ? reviews.filter((review) => review.testimonial).slice(0, 3)
     : reviews.slice(0, 3));
+  const singleComparisonLayout = comparisonReviews.length === 1;
+  const singleFeaturedLayout = featuredReviews.length === 1;
   const averageRating = getAverageRating(reviews);
 
   function scrollToForm() {
@@ -128,19 +170,25 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
     setError(null);
     setSuccess(false);
 
-    const paneCounts = {
-      standard: Number(form.paneCounts.standard) || 0,
-      specialty: Number(form.paneCounts.specialty) || 0,
-      french: Number(form.paneCounts.french) || 0,
-    };
-    const totalPaneCount = Object.values(paneCounts).reduce((sum, count) => sum + count, 0);
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim() || !form.address.trim()) {
-      setError("First name, last name, phone number, and address are required.");
+    const { firstName, lastName } = splitContactName(form.contactFullName);
+    const pStandard = Number(form.paneCounts.standard) || 0;
+    const pSpecialty = Number(form.paneCounts.specialty) || 0;
+    const pFrench = Number(form.paneCounts.french) || 0;
+    const totalFromBreakdown = pStandard + pSpecialty + pFrench;
+    const mainEstimate = Number(form.estimatedPanes) || 0;
+    const paneCounts =
+      totalFromBreakdown > 0
+        ? { standard: pStandard, specialty: pSpecialty, french: pFrench }
+        : { standard: mainEstimate, specialty: 0, french: 0 };
+    const totalPaneCount = paneCounts.standard + paneCounts.specialty + paneCounts.french;
+
+    if (!firstName.trim() || !lastName.trim() || !form.phone.trim() || !form.address.trim()) {
+      setError("Add your first and last name, phone number, and street address.");
       return;
     }
 
     if (!Number.isFinite(totalPaneCount) || totalPaneCount <= 0) {
-      setError("Add at least 1 pane before requesting a call.");
+      setError("Add an estimated pane count (or use optional breakdown below).");
       return;
     }
 
@@ -150,8 +198,8 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           email: form.email.trim() || undefined,
           phone: form.phone,
           address: form.address,
@@ -181,196 +229,324 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
   }
 
   return (
-    <div className="app-page-shell overflow-hidden">
+    <div className="app-page-shell relative overflow-hidden">
+      {pageBackdrop ? (
+        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
+          <Image
+            src={pageBackdrop}
+            alt=""
+            fill
+            className="object-cover opacity-[0.06] sm:opacity-[0.09]"
+            unoptimized={isDirectFile(pageBackdrop)}
+            sizes="100vw"
+            priority={false}
+          />
+        </div>
+      ) : null}
+
+      <div className="relative z-[1]">
       <PublicSiteHeader />
 
       <main>
-      <section className="relative isolate">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(11,111,178,0.17),transparent_32%),radial-gradient(circle_at_88%_14%,rgba(56,189,248,0.16),transparent_24%),linear-gradient(180deg,#f8fbff_0%,#edf5ff_56%,#eef4f8_100%)]" />
-        <div className="absolute left-[-5rem] top-20 h-56 w-56 rounded-full bg-primary/8 blur-3xl" />
-        <div className="absolute bottom-0 right-[-3rem] h-64 w-64 rounded-full bg-sky-300/15 blur-3xl" />
+      <section className="relative isolate min-h-[max(100svh,100dvh)]">
+        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
+          <Image
+            src={heroBackdropSrc}
+            alt=""
+            fill
+            className="object-cover object-[center_28%] sm:object-center"
+            unoptimized={isDirectFile(heroBackdropSrc)}
+            sizes="(max-width: 1024px) 100vw, min(1280px, 92vw)"
+            priority
+            fetchPriority="high"
+          />
+        </div>
+        {/* Readability: darken photo, then strong left scrim so copy avoids busy areas (WCAG-friendly contrast). */}
+        <div
+          className="absolute inset-0 z-[1] bg-gradient-to-br from-slate-950/55 via-slate-900/28 to-slate-900/50"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 z-[1] bg-[linear-gradient(100deg,rgba(255,255,255,0.97)_0%,rgba(255,255,255,0.94)_min(28rem,72%)_32%,rgba(255,255,255,0.72)_55%,rgba(255,255,255,0.2)_78%,transparent_100%)]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_85%_65%_at_0%_0%,rgba(11,111,178,0.11),transparent_58%),radial-gradient(ellipse_55%_50%_at_100%_12%,rgba(56,189,248,0.1),transparent_52%)]"
+          aria-hidden
+        />
 
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:items-start">
-            <div className="space-y-8 pt-2 lg:pt-8">
-              <div className="inline-flex animate-in fade-in slide-in-from-bottom-4 items-center rounded-full border border-primary/20 bg-white/75 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary shadow-sm backdrop-blur duration-500">
-                PureBin LV
-              </div>
-
-              <div className="max-w-3xl space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                <h1 className="max-w-4xl text-4xl font-black tracking-[-0.05em] text-balance text-foreground sm:text-5xl lg:text-6xl">
-                  Window Cleaning Las Vegas Homeowners and Businesses Can Approve Before They Pay
+        <div className="relative z-[2] mx-auto w-full max-w-7xl px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 lg:px-10 lg:pb-20 lg:pt-20">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,26.5rem)] lg:items-start lg:gap-x-14 lg:gap-y-10">
+            <div className="max-lg:order-1 lg:col-start-1 lg:row-start-1">
+              <div className="max-w-[37.5rem] space-y-5 text-left text-slate-900">
+                <h1 className="text-balance text-4xl font-black leading-[1.08] tracking-[-0.04em] sm:text-5xl lg:text-[3.25rem] lg:leading-[1.06]">
+                  Las Vegas Window Cleaning You Approve Before You Pay
                 </h1>
-                <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  Residential window cleaning, commercial window cleaning, storefront glass cleaning, and exterior window
-                  washing across Las Vegas with screens, frames, tracks, sills, and glass cleaned top to bottom.
+                <p className="text-lg font-medium leading-relaxed text-slate-800 sm:text-xl">
+                  We call you back with exact pricing for your panes before anything is scheduled—no surprise bills.
                 </p>
-              </div>
-
-              <div className="grid gap-3 animate-in fade-in slide-in-from-bottom-8 duration-700 sm:max-w-2xl">
-                {[
-                  "You do not pay until you approve the job",
-                  "5% of every job goes back to Las Vegas",
-                  `Serving Las Vegas since ${businessInfo.servingSinceYear}`,
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/88 px-4 py-4 text-sm font-semibold text-foreground shadow-[0_20px_50px_-36px_rgba(15,23,42,0.28)] backdrop-blur"
-                  >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <BadgeCheck className="size-4" />
-                    </span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="max-w-3xl rounded-[1.8rem] border border-white/80 bg-white/92 px-5 py-5 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.24)] animate-in fade-in slide-in-from-bottom-10 duration-700">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Service Areas</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {BUSINESS.serviceAreas.map((area) => (
-                    <span key={area} className="app-chip">
-                      {area}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-base font-semibold text-slate-700">
+                  PureBin LV · Las Vegas · Since {businessInfo.servingSinceYear}
+                </p>
               </div>
             </div>
 
-            <section ref={formRef} id="quote-form" className="lg:sticky lg:top-6">
-              <div className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_28px_100px_-44px_rgba(15,23,42,0.38)] backdrop-blur animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <section
+              ref={formRef}
+              id="quote-form"
+              className="max-lg:order-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:sticky lg:top-6"
+            >
+              <div className="overflow-hidden rounded-3xl border border-slate-200/95 bg-white shadow-[0_4px_6px_-1px_rgba(15,23,42,0.06),0_22px_50px_-18px_rgba(15,23,42,0.2),0_48px_90px_-36px_rgba(15,23,42,0.14)]">
                 <div className="app-brand-strip" />
-                <div className="space-y-6 p-6 sm:p-7">
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Quote Request</p>
-                    <div className="space-y-2">
-                      <h2 className="text-3xl font-black tracking-tight text-foreground">Get a fast quote - we&apos;ll call you</h2>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        Quick form, local callback, exact pricing before anything is scheduled.
-                      </p>
-                    </div>
+                <div className="space-y-6 p-7 sm:p-8">
+                  <div className="space-y-2 text-left">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Free quote</p>
+                    <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-[1.75rem]">
+                      Get a callback with your price
+                    </h2>
                   </div>
 
+                  {reviews.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/95 px-4 py-3 text-left">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <StarRating rating={Number.parseFloat(averageRating) || 5} className="text-amber-500" />
+                          <span className="text-sm font-bold text-slate-900">{averageRating} avg</span>
+                          <span className="text-sm text-slate-600">· {reviews.length}+ local reviews</span>
+                        </div>
+                        {featuredReviews[0]?.testimonial ? (
+                          <p className="text-sm leading-snug text-slate-700 line-clamp-2">
+                            &ldquo;{featuredReviews[0].testimonial}&rdquo;
+                          </p>
+                        ) : (
+                          <p className="text-sm text-slate-700">Trusted by Las Vegas homeowners and businesses.</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/95 px-4 py-3 text-left text-sm text-slate-700">
+                      Local Las Vegas team · Licensed & insured · You approve before you pay
+                    </div>
+                  )}
+
                   {success ? (
-                    <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-5 text-emerald-900">
-                      <p className="text-lg font-black">You&apos;re on the list - we&apos;ll be calling you shortly.</p>
-                      <p className="mt-2 text-sm font-medium">Most calls happen within the next hour.</p>
-                      <p className="mt-3 text-sm text-emerald-800">You&apos;ll get exact pricing before anything is scheduled.</p>
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-5 text-emerald-950">
+                      <p className="text-lg font-black">You&apos;re on the list—we&apos;ll call shortly.</p>
+                      <p className="mt-2 text-sm font-medium">Most callbacks happen within an hour.</p>
+                      <p className="mt-2 text-sm text-emerald-900">Exact pricing before we schedule anything.</p>
                     </div>
                   ) : null}
 
-                  <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="quote-first-name">First name</Label>
-                        <Input id="quote-first-name" value={form.firstName} onChange={(event) => updateField("firstName", event.target.value)} placeholder="Theo" className="h-12 rounded-2xl border-border bg-white" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="quote-last-name">Last name</Label>
-                        <Input id="quote-last-name" value={form.lastName} onChange={(event) => updateField("lastName", event.target.value)} placeholder="Allen" className="h-12 rounded-2xl border-border bg-white" required />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="quote-phone" className="text-[15px] font-semibold text-foreground">Phone number</Label>
+                  <form className="space-y-5" onSubmit={handleSubmit}>
+                    <div className="space-y-2 text-left">
+                      <Label htmlFor="quote-full-name" className="text-base font-semibold text-slate-900">
+                        Full name
+                      </Label>
                       <Input
-                        id="quote-phone"
-                        type="tel"
-                        value={form.phone}
-                        onChange={(event) => updateField("phone", event.target.value)}
-                        placeholder="(702) 555-0148"
-                        className="h-14 rounded-2xl border-primary/40 bg-primary/[0.05] text-base font-semibold shadow-[0_0_0_1px_rgba(11,111,178,0.08)] placeholder:text-primary/55 focus-visible:ring-primary/25"
+                        id="quote-full-name"
+                        autoComplete="name"
+                        value={form.contactFullName}
+                        onChange={(event) => updateField("contactFullName", event.target.value)}
+                        placeholder="Alex Johnson"
+                        className="h-12 min-h-[48px] rounded-2xl border-slate-200 bg-white text-base text-slate-900"
                         required
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="quote-email">Email (optional)</Label>
+                    <div className="space-y-2 text-left">
+                      <Label htmlFor="quote-phone" className="text-base font-semibold text-slate-900">
+                        Phone
+                      </Label>
                       <Input
-                        id="quote-email"
-                        type="email"
-                        value={form.email}
-                        onChange={(event) => updateField("email", event.target.value)}
-                        placeholder="you@example.com"
-                        className="h-12 rounded-2xl border-border bg-white"
+                        id="quote-phone"
+                        type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        value={form.phone}
+                        onChange={(event) => updateField("phone", event.target.value)}
+                        placeholder="(702) 555-0148"
+                        className="h-14 min-h-[52px] rounded-2xl border-primary/35 bg-primary/[0.06] text-base font-semibold text-slate-900 shadow-[0_0_0_1px_rgba(11,111,178,0.08)]"
+                        required
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="quote-address">Address</Label>
-                      <Input id="quote-address" value={form.address} onChange={(event) => updateField("address", event.target.value)} placeholder="1234 Main St, Las Vegas, NV" className="h-12 rounded-2xl border-border bg-white" required />
+                    <div className="space-y-2 text-left">
+                      <Label htmlFor="quote-address" className="text-base font-semibold text-slate-900">
+                        Property address
+                      </Label>
+                      <Input
+                        id="quote-address"
+                        autoComplete="street-address"
+                        value={form.address}
+                        onChange={(event) => updateField("address", event.target.value)}
+                        placeholder="1234 Main St, Las Vegas, NV"
+                        className="h-12 min-h-[48px] rounded-2xl border-slate-200 bg-white text-base text-slate-900"
+                        required
+                      />
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="quote-best-time">Best time to call</Label>
-                        <select id="quote-best-time" value={form.bestTimeToCall} onChange={(event) => updateField("bestTimeToCall", event.target.value)} className="h-12 w-full rounded-2xl border border-border bg-white px-3 text-sm font-medium text-foreground outline-none transition focus:border-ring focus:ring-[3px] focus:ring-ring/50">
-                          <option>As soon as possible</option>
-                          <option>This morning</option>
-                          <option>This afternoon</option>
-                          <option>This evening</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="quote-home-type">Home type</Label>
-                        <select id="quote-home-type" value={form.homeType} onChange={(event) => updateField("homeType", event.target.value)} className="h-12 w-full rounded-2xl border border-border bg-white px-3 text-sm font-medium text-foreground outline-none transition focus:border-ring focus:ring-[3px] focus:ring-ring/50">
-                          <option>Single-story home</option>
-                          <option>Two-story home</option>
-                          <option>Condo or townhome</option>
-                          <option>Custom property</option>
-                        </select>
-                      </div>
+                    <div className="space-y-2 text-left">
+                      <Label htmlFor="quote-estimated-panes" className="text-base font-semibold text-slate-900">
+                        Estimated panes (total)
+                      </Label>
+                      <Input
+                        id="quote-estimated-panes"
+                        type="number"
+                        min={1}
+                        inputMode="numeric"
+                        value={form.estimatedPanes}
+                        onChange={(event) => updateField("estimatedPanes", event.target.value)}
+                        placeholder="e.g. 16"
+                        className="h-12 min-h-[48px] rounded-2xl border-slate-200 bg-white text-base text-slate-900"
+                      />
+                      <p className="text-sm leading-snug text-slate-600">Rough count is fine—we confirm on the call.</p>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <Label>Pane types</Label>
-                        <p className="text-sm text-muted-foreground">Add the pane counts that fit the home best.</p>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {paneFieldOptions.map((option) => (
-                          <div key={option.id} className="space-y-2 rounded-[1.5rem] border border-border bg-white p-4">
-                            <Label htmlFor={`quote-pane-${option.id}`}>{option.label}</Label>
-                            <Input
-                              id={`quote-pane-${option.id}`}
-                              type="number"
-                              min="0"
-                              inputMode="numeric"
-                              value={form.paneCounts[option.id]}
-                              onChange={(event) => updatePaneCount(option.id, event.target.value)}
-                              placeholder={option.placeholder}
-                              className="h-12 rounded-2xl border-border bg-white"
-                            />
+                    <details className="group rounded-2xl border border-slate-200 bg-slate-50/80 text-left [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3.5 text-sm font-semibold text-slate-900 min-h-[48px]">
+                        <span>More details (optional)</span>
+                        <span className="text-xs font-bold text-primary group-open:rotate-180 motion-safe:transition">▼</span>
+                      </summary>
+                      <div className="space-y-4 border-t border-slate-200/90 px-4 pb-4 pt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="quote-email">Email</Label>
+                          <Input
+                            id="quote-email"
+                            type="email"
+                            autoComplete="email"
+                            value={form.email}
+                            onChange={(event) => updateField("email", event.target.value)}
+                            placeholder="you@example.com"
+                            className="h-12 min-h-[48px] rounded-2xl border-slate-200 bg-white text-base"
+                          />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="quote-best-time">Best time to call</Label>
+                            <select
+                              id="quote-best-time"
+                              value={form.bestTimeToCall}
+                              onChange={(event) => updateField("bestTimeToCall", event.target.value)}
+                              className="h-12 min-h-[48px] w-full rounded-2xl border border-slate-200 bg-white px-3 text-base font-medium text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option>As soon as possible</option>
+                              <option>This morning</option>
+                              <option>This afternoon</option>
+                              <option>This evening</option>
+                            </select>
                           </div>
-                        ))}
+                          <div className="space-y-2">
+                            <Label htmlFor="quote-home-type">Property type</Label>
+                            <select
+                              id="quote-home-type"
+                              value={form.homeType}
+                              onChange={(event) => updateField("homeType", event.target.value)}
+                              className="h-12 min-h-[48px] w-full rounded-2xl border border-slate-200 bg-white px-3 text-base font-medium text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option>Single-story home</option>
+                              <option>Two-story home</option>
+                              <option>Condo or townhome</option>
+                              <option>Custom property</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="quote-service-type">Service focus</Label>
+                          <select
+                            id="quote-service-type"
+                            value={form.serviceType}
+                            onChange={(event) => updateField("serviceType", event.target.value)}
+                            className="h-12 min-h-[48px] w-full rounded-2xl border border-slate-200 bg-white px-3 text-base font-medium text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          >
+                            <option>Inside and out</option>
+                            <option>Exterior only</option>
+                            <option>Glass, tracks, and screens</option>
+                            <option>Need help choosing</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Fine-tune pane counts</Label>
+                          <p className="text-sm text-slate-600">If filled, these override the single estimate above.</p>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {paneFieldOptions.map((option) => (
+                              <div key={option.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+                                <Label htmlFor={`quote-pane-${option.id}`} className="text-sm">
+                                  {option.label}
+                                </Label>
+                                <Input
+                                  id={`quote-pane-${option.id}`}
+                                  type="number"
+                                  min="0"
+                                  inputMode="numeric"
+                                  value={form.paneCounts[option.id]}
+                                  onChange={(event) => updatePaneCount(option.id, event.target.value)}
+                                  placeholder={option.placeholder}
+                                  className="h-12 min-h-[48px] rounded-xl border-slate-200 bg-white text-base"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </details>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="quote-service-type">Service type</Label>
-                        <select id="quote-service-type" value={form.serviceType} onChange={(event) => updateField("serviceType", event.target.value)} className="h-12 w-full rounded-2xl border border-border bg-white px-3 text-sm font-medium text-foreground outline-none transition focus:border-ring focus:ring-[3px] focus:ring-ring/50">
-                          <option>Inside and out</option>
-                          <option>Exterior only</option>
-                          <option>Glass, tracks, and screens</option>
-                          <option>Need help choosing</option>
-                        </select>
-                      </div>
-                    </div>
+                    {error ? (
+                      <p className="text-sm font-medium text-destructive" role="alert">
+                        {error}
+                      </p>
+                    ) : null}
 
-                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                    <div className="space-y-3 pt-2">
-                      <Button type="submit" size="lg" className="h-14 w-full rounded-full text-base font-semibold" disabled={loading}>
-                        {loading ? "Requesting your call..." : "Request My Quote Call"}
-                        <ArrowRight className="size-4" />
+                    <div className="space-y-2 pt-1">
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="h-14 min-h-[52px] w-full rounded-full text-base font-bold shadow-md sm:text-lg"
+                        disabled={loading}
+                      >
+                        {loading ? "Sending…" : "Get my free quote call"}
+                        <ArrowRight className="size-5" aria-hidden />
                       </Button>
-                      <p className="text-center text-sm text-muted-foreground">Takes 30 seconds - no obligation</p>
+                      <p className="text-center text-sm font-medium leading-snug text-slate-600">
+                        Free quote in about 60 seconds · No obligation · Local Las Vegas team
+                      </p>
                     </div>
                   </form>
                 </div>
               </div>
             </section>
+
+            <div className="max-lg:order-3 lg:col-start-1 lg:row-start-2">
+              <div className="mx-auto max-w-[37.5rem] space-y-8 text-left lg:mx-0">
+                <div className="grid gap-3 sm:max-w-2xl">
+                  {[
+                    "You do not pay until you approve the job",
+                    "5% of every job goes back to Las Vegas",
+                    `Serving Las Vegas since ${businessInfo.servingSinceYear}`,
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 rounded-2xl border border-slate-200/90 bg-white/90 px-4 py-4 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur-sm"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
+                        <BadgeCheck className="size-5" />
+                      </span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/90 bg-white/90 px-5 py-5 shadow-sm backdrop-blur-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Service areas</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {BUSINESS.serviceAreas.map((area) => (
+                      <span key={area} className="app-chip">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -420,26 +596,45 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
               title: "Screens cleaned",
               description: "Dust, buildup, and loose debris removed so airflow and visibility feel fresh again.",
               icon: Sparkles,
+              image: LANDING_INCLUDED_IMAGES[0],
             },
             {
               title: "Frames, tracks, sills cleaned",
               description: "The edges get cleaned too, so the windows look finished instead of only wiped.",
               icon: Handshake,
+              image: LANDING_INCLUDED_IMAGES[1],
             },
             {
               title: "All glass cleaned inside and out",
               description: "Clearer glass, sharper curb appeal, and brighter rooms without streaks left behind.",
               icon: Glasses,
+              image: LANDING_INCLUDED_IMAGES[2],
             },
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <article key={item.title} className="rounded-[2rem] border border-white/80 bg-white/92 px-6 py-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="size-5" />
-                </span>
-                <h3 className="mt-5 text-2xl font-black tracking-tight text-foreground">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+              <article
+                key={item.title}
+                className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]"
+              >
+                <div className="relative h-36 w-full bg-slate-200">
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/20 to-transparent" aria-hidden />
+                </div>
+                <div className="px-6 pb-6 pt-4">
+                  <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-5 text-2xl font-black tracking-tight text-foreground">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                </div>
               </article>
             );
           })}
@@ -460,24 +655,40 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {SERVICE_PAGES.map((service) => (
-            <article key={service.slug} className="rounded-[2rem] border border-white/80 bg-white/92 px-6 py-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                {service.slug === "commercial-window-cleaning" ? (
-                  <Building2 className="size-5" />
-                ) : service.slug === "high-rise-window-cleaning" ? (
-                  <MapPin className="size-5" />
-                ) : (
-                  <Home className="size-5" />
-                )}
-              </span>
-              <h3 className="mt-5 text-2xl font-black tracking-tight text-foreground">{service.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{service.summary}</p>
-              <Button asChild variant="outline" className="mt-5 rounded-full">
-                <Link href={`/services/${service.slug}`}>
-                  Explore Service Page
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
+            <article
+              key={service.slug}
+              className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.28)]"
+            >
+              <div className="relative h-40 w-full bg-slate-200">
+                <Image
+                  src={landingServiceImageForSlug(service.slug)}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/25 to-transparent" aria-hidden />
+              </div>
+              <div className="px-6 pb-6 pt-4">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  {service.slug === "commercial-window-cleaning" ? (
+                    <Building2 className="size-5" />
+                  ) : service.slug === "high-rise-window-cleaning" ? (
+                    <MapPin className="size-5" />
+                  ) : (
+                    <Home className="size-5" />
+                  )}
+                </span>
+                <h3 className="mt-5 text-2xl font-black tracking-tight text-foreground">{service.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{service.summary}</p>
+                <Button asChild variant="outline" className="mt-5 rounded-full">
+                  <Link href={`/services/${service.slug}`}>
+                    Explore Service Page
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </div>
             </article>
           ))}
         </div>
@@ -492,10 +703,23 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-3">
+        <div
+          className={
+            singleComparisonLayout
+              ? "mt-8 grid gap-5 lg:grid-cols-1 lg:justify-items-center"
+              : "mt-8 grid gap-5 lg:grid-cols-3"
+          }
+        >
           {comparisonReviews.length ? (
             comparisonReviews.map((review) => (
-              <article key={review.id} className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]">
+              <article
+                key={review.id}
+                className={
+                  singleComparisonLayout
+                    ? "w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]"
+                    : "overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]"
+                }
+              >
                 <div className="grid grid-cols-2 gap-px bg-border">
                   <div className="relative aspect-[4/5] bg-slate-100">
                     <Image
@@ -505,6 +729,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
                       className="object-cover"
                       unoptimized={isDirectFile(review.houseBeforePhotoUrl)}
                       sizes="(max-width: 1024px) 50vw, 20vw"
+                      loading="lazy"
                     />
                     <span className="absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">
                       Before
@@ -519,6 +744,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
                         className="object-cover"
                         unoptimized={isDirectFile(review.houseAfterPhotoUrl)}
                         sizes="(max-width: 1024px) 50vw, 20vw"
+                        loading="lazy"
                       />
                     ) : null}
                     <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground">
@@ -541,7 +767,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
               </article>
             ))
           ) : (
-            <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-8 text-sm leading-6 text-muted-foreground shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)] lg:col-span-3">
+            <div className="col-span-full rounded-[2rem] border border-white/80 bg-white/94 px-6 py-8 text-sm leading-6 text-muted-foreground shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]">
               Before-and-after photo sets will appear here from submitted customer reviews.
             </div>
           )}
@@ -550,7 +776,24 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
 
       <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            {accentBackgroundUrl ? (
+              <>
+                <div className="pointer-events-none absolute inset-0 z-0">
+                  <Image
+                    src={accentBackgroundUrl}
+                    alt=""
+                    fill
+                    className="object-cover opacity-[0.18]"
+                    unoptimized={isDirectFile(accentBackgroundUrl)}
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="absolute inset-0 z-[1] bg-gradient-to-br from-background/93 via-background/90 to-background/95" />
+              </>
+            ) : null}
+            <div className={accentBackgroundUrl ? "relative z-[2]" : undefined}>
             <p className="app-kicker">Las Vegas Focus</p>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               Why local Las Vegas window cleaning pages matter
@@ -574,6 +817,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
+            </div>
           </div>
 
           <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
@@ -630,7 +874,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
             Questions people ask before booking window cleaning in Las Vegas
           </h2>
           <p className="text-base leading-7 text-muted-foreground">
-            Answering these on the page helps conversions and gives search engines more context about service scope, pricing, and local coverage.
+            Answering these here saves a phone call and makes scope, pricing, and coverage easier to understand before you book.
           </p>
         </div>
 
@@ -657,9 +901,22 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
           </p>
         </div>
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <div
+          className={
+            singleFeaturedLayout
+              ? "mt-8 grid gap-4 lg:grid-cols-1 lg:justify-items-center"
+              : "mt-8 grid gap-4 lg:grid-cols-3"
+          }
+        >
           {featuredReviews.map((review) => (
-            <article key={review.id} className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-6 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+            <article
+              key={review.id}
+              className={
+                singleFeaturedLayout
+                  ? "w-full max-w-xl rounded-[2rem] border border-white/80 bg-white/94 px-6 py-6 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+                  : "rounded-[2rem] border border-white/80 bg-white/94 px-6 py-6 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+              }
+            >
               <StarRating rating={review.rating} className="text-amber-500" />
               <p className="mt-5 text-base leading-7 text-foreground">
                 &quot;{review.testimonial || "Clear communication, clean windows, and a final walkthrough before anything was paid."}&quot;
@@ -689,6 +946,7 @@ export default function CustomerQuoteLanding({ reviews, businessInfo }: Customer
       </main>
 
       <PublicSiteFooter businessInfo={businessInfo} />
+      </div>
     </div>
   );
 }

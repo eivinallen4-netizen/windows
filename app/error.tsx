@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SiteHeader } from "@/components/site-header";
+import { PublicSiteHeader } from "@/components/public-site-header";
 
 export default function ErrorPage({
   error,
@@ -19,7 +19,7 @@ export default function ErrorPage({
 
   return (
     <div className="app-page-shell">
-      <SiteHeader />
+      <PublicSiteHeader />
       <main className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-3xl items-center px-4 py-10">
         <section className="app-surface-panel w-full p-8 sm:p-10">
           <div className="space-y-5">

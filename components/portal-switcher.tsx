@@ -25,7 +25,7 @@ export function PortalSwitcher({ role, className }: PortalSwitcherProps) {
   if (role !== "admin") {
     return (
       <div className={className}>
-        <div className="inline-flex items-center rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold">
+        <div className="inline-flex items-center rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground">
           {getPortalLabel(activePortal)}
         </div>
       </div>
@@ -45,7 +45,7 @@ export function PortalSwitcher({ role, className }: PortalSwitcherProps) {
             <ChevronLeft className="size-4" />
           </Link>
         </Button>
-        <div className="min-w-20 text-center text-sm font-semibold">
+        <div className="min-w-20 text-center text-sm font-semibold text-foreground">
           {getPortalLabel(activePortal)}
         </div>
         <Button asChild variant="ghost" size="icon" className="size-8 rounded-full" aria-label={`Switch to ${getPortalLabel(nextPortal)} portal`}>

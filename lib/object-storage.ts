@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
 import { deleteFromR2, getSignedR2UploadUrl, hasR2Config, uploadToR2 } from "@/lib/r2";
+import { storedMediaToDisplayUrl } from "@/lib/stored-media-url";
 
 const R2_REF_PREFIX = "r2:";
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -32,8 +33,7 @@ export function toPublicObjectUrl(value?: string | null) {
   }
 
   if (isR2StoredRef(value)) {
-    const key = getObjectKeyFromStoredRef(value);
-    return `/api/files?key=${encodeURIComponent(key)}`;
+    return storedMediaToDisplayUrl(value);
   }
 
   return value;

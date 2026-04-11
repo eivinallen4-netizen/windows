@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Home, MapPin } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteHeader } from "@/components/public-site-header";
-import { SiteHeader } from "@/components/site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/star-rating";
 import { PublicSiteFooter } from "@/components/public-site-footer";
-import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { LANDING_GALLERY_STRIP, getPublicPageStockHero } from "@/lib/landing-stock-media";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { getReviews } from "@/lib/reviews";
 import { getPublicArea } from "@/lib/public-site";
@@ -30,14 +30,12 @@ function isDirectFile(url: string | undefined) {
 }
 
 export default async function ReviewsPage() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(getSessionCookieName())?.value;
-  const session = sessionToken ? await verifySessionToken(sessionToken) : null;
   const [reviews, businessInfo] = await Promise.all([getReviews(), readPublicBusinessSnapshot()]);
   const featuredReviews = reviews.length ? reviews : [];
+  const hero = getPublicPageStockHero("reviews");
 
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       <JsonLd data={buildLocalBusinessSchema(reviews, businessInfo)} />
       <JsonLd
         data={buildBreadcrumbSchema([
@@ -45,7 +43,7 @@ export default async function ReviewsPage() {
           { name: "Reviews", path: "/reviews" },
         ])}
       />
-      {session ? <SiteHeader /> : <PublicSiteHeader />}
+      <PublicSiteHeader />
       <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
         <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-3xl space-y-5">
@@ -62,14 +60,25 @@ export default async function ReviewsPage() {
               </Link>
             </Button>
           </div>
+          <PublicStockHeroImage {...hero} className="mt-8 max-w-3xl" priority />
         </section>
 
-        <section className="mt-8 grid gap-5 lg:grid-cols-2">
+        <section
+          className={
+            featuredReviews.length === 1
+              ? "mt-8 grid gap-5 lg:grid-cols-1 lg:justify-items-center"
+              : "mt-8 grid gap-5 lg:grid-cols-2"
+          }
+        >
           {featuredReviews.length ? (
             featuredReviews.map((review, index) => (
               <article
                 key={review.id}
-                className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]"
+                className={
+                  featuredReviews.length === 1
+                    ? "w-full max-w-2xl overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]"
+                    : "overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.3)]"
+                }
               >
                 {review.houseAfterPhotoUrl ? (
                   <div className="grid grid-cols-2 gap-px bg-border">
@@ -131,8 +140,21 @@ export default async function ReviewsPage() {
               </article>
             ))
           ) : (
-            <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-8 text-sm leading-6 text-muted-foreground shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)] lg:col-span-3">
-              Customer reviews will appear here as new jobs are completed.
+            <div className="col-span-full space-y-6">
+              <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-8 text-sm leading-6 text-muted-foreground shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
+                Customer reviews will appear here as new jobs are completed. Example photography below shows the kind of results we
+                highlight on the site.
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {LANDING_GALLERY_STRIP.slice(0, 3).map((url) => (
+                  <div
+                    key={url}
+                    className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] border border-white/80 bg-slate-100 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.3)]"
+                  >
+                    <Image src={url} alt="" fill className="object-cover" sizes="(max-width: 640px) 100vw, 33vw" />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </section>
@@ -165,6 +187,6 @@ export default async function ReviewsPage() {
       </main>
 
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

@@ -94,7 +94,7 @@ export default function AccountForm() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading account...</p>;
+    return <p className="text-sm text-muted-foreground">Loading account...</p>;
   }
 
   if (!user) {
@@ -102,7 +102,7 @@ export default function AccountForm() {
   }
 
   return (
-    <Card className="w-full max-w-2xl border border-white/70 bg-white/90 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.45)] backdrop-blur">
+    <Card className="w-full max-w-2xl border-border bg-card shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
       <CardHeader>
         <CardTitle>{`Hey ${user.name || "there"}, welcome to the team.`}</CardTitle>
         <CardDescription>Update your contact details and PIN here.</CardDescription>
@@ -143,7 +143,7 @@ export default function AccountForm() {
             />
           </div>
           {error ? <p className="text-sm text-destructive sm:col-span-2">{error}</p> : null}
-          {status ? <p className="text-sm text-slate-500 sm:col-span-2">{status}</p> : null}
+          {status ? <p className="text-sm text-muted-foreground sm:col-span-2">{status}</p> : null}
           <Button type="submit" className="sm:col-span-2" disabled={saving}>
             {saving ? "Saving..." : "Save account"}
           </Button>

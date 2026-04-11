@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,12 +135,8 @@ export function UsersAdminPanel() {
       }
       const payload = (await response.json()) as { users: UserSummary[] };
       setUsers(payload.users);
-      if (!preserveSelection && payload.users[0]) {
-        setSelectedUserId(payload.users[0].id);
-      } else if (preserveSelection && selectedUserId && !payload.users.find((user) => user.id === selectedUserId)) {
+      if (preserveSelection && selectedUserId && !payload.users.find((user) => user.id === selectedUserId)) {
         setSelectedUserId(payload.users[0]?.id ?? null);
-      } else if (!selectedUserId && payload.users[0]) {
-        setSelectedUserId(payload.users[0].id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load users.");
@@ -317,6 +314,13 @@ export function UsersAdminPanel() {
     }
   }
 
+  function handleBackToList() {
+    setSelectedUserId(null);
+    setSelectedUser(null);
+    setEditMode(false);
+    setInviteLink(null);
+  }
+
   const orderedUsers = useMemo(
     () =>
       [...users].sort((a, b) => {
@@ -379,56 +383,37 @@ export function UsersAdminPanel() {
 
         <Separator />
 
-        <div className="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
-          <div className="space-y-3">
-            {loading ? (
-              <p className="text-sm text-slate-600">Loading users...</p>
-            ) : orderedUsers.length === 0 ? (
-              <p className="text-sm text-slate-600">No users yet.</p>
-            ) : (
-              orderedUsers.map((user) => (
-                <button
-                  key={user.id}
-                  type="button"
-                  onClick={() => setSelectedUserId(user.id)}
-                  className={`w-full rounded-lg border p-4 text-left transition ${
-                    selectedUserId === user.id ? "border-sky-400 bg-sky-50" : "border-slate-200 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold">{user.name || "Unnamed"}</p>
-                      <p className="text-xs text-slate-500">{user.email || "Not completed"}</p>
-                      <p className="text-xs text-slate-500">Role: {user.role}</p>
-                      <p className="text-xs text-slate-500">Created: {formatDate(user.created_at)}</p>
-                      {user.last_signed_in_at ? (
-                        <p className="text-xs text-slate-500">Last sign-in: {formatDate(user.last_signed_in_at)}</p>
-                      ) : null}
-                    </div>
-                    <Badge className={statusTone[user.invite_status]}>{user.invite_status}</Badge>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
+        {selectedUserId ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={darkOutlineButton}
+                onClick={handleBackToList}
+              >
+                <ArrowLeft className="size-4" />
+                Back to users
+              </Button>
+            </div>
 
-          <div>
-            {!selectedUserId ? (
-              <p className="text-sm text-slate-600">Select a user to view details.</p>
-            ) : detailsLoading || !selectedUser ? (
+            {detailsLoading || !selectedUser ? (
               <p className="text-sm text-slate-600">Loading details...</p>
             ) : (
-              <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold">{selectedUser.name || "Unnamed"}</h3>
-                    <p className="text-sm text-slate-600">{selectedUser.email || "Not completed"}</p>
+                    <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+                      {selectedUser.name || "Unnamed"}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">{selectedUser.email || "Not completed"}</p>
                   </div>
                   <Badge className={statusTone[selectedUser.invite_status]}>{selectedUser.invite_status}</Badge>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between gap-3">
+                <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Profile</p>
                     <Button
                       type="button"
@@ -442,7 +427,7 @@ export function UsersAdminPanel() {
                   </div>
 
                   {editMode ? (
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div className="space-y-2">
                         <Label htmlFor="detail-name">Name</Label>
                         <Input id="detail-name" value={draftName} onChange={(event) => setDraftName(event.target.value)} />
@@ -475,7 +460,7 @@ export function UsersAdminPanel() {
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <DataTile label="Name" value={displayValue(selectedUser.name)} />
                       <DataTile label="Role" value={selectedUser.role} />
                       <DataTile label="Phone" value={displayValue(selectedUser.phone)} />
@@ -509,8 +494,8 @@ export function UsersAdminPanel() {
 
                 <Separator />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Account status</p>
                     <div className="mt-3 space-y-2 text-sm text-slate-700">
                       <p>Created: {formatDate(selectedUser.created_at)}</p>
@@ -521,7 +506,7 @@ export function UsersAdminPanel() {
                       <p>Invite used: {formatDate(selectedUser.invite_used_at)}</p>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="rounded-lg border border-slate-200 bg-white p-4">
                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Activity</p>
                     <div className="mt-3 space-y-2 text-sm text-slate-700">
                       {"quoteCount" in activity ? (
@@ -546,7 +531,40 @@ export function UsersAdminPanel() {
               </div>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="space-y-3">
+            {loading ? (
+              <p className="text-sm text-slate-600">Loading users...</p>
+            ) : orderedUsers.length === 0 ? (
+              <p className="text-sm text-slate-600">No users yet.</p>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600">Click a user to open their full profile and actions.</p>
+                {orderedUsers.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => setSelectedUserId(user.id)}
+                    className="w-full rounded-lg border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">{user.name || "Unnamed"}</p>
+                        <p className="text-xs text-slate-500">{user.email || "Not completed"}</p>
+                        <p className="text-xs text-slate-500">Role: {user.role}</p>
+                        <p className="text-xs text-slate-500">Created: {formatDate(user.created_at)}</p>
+                        {user.last_signed_in_at ? (
+                          <p className="text-xs text-slate-500">Last sign-in: {formatDate(user.last_signed_in_at)}</p>
+                        ) : null}
+                      </div>
+                      <Badge className={statusTone[user.invite_status]}>{user.invite_status}</Badge>
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

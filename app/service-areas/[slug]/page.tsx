@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
+import { getPublicPageStockHero, landingServiceImageForSlug } from "@/lib/landing-stock-media";
 import { BUSINESS, SERVICE_AREA_PAGES, SERVICE_LINKS } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { buildBreadcrumbSchema, buildFAQSchema, buildPageMetadata } from "@/lib/seo";
@@ -52,8 +56,11 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
     buildFAQSchema(area.faq),
   ];
 
+  const hero = getPublicPageStockHero("serviceAreaLocal");
+  const heroVisual = landingServiceImageForSlug("residential-window-cleaning");
+
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       {schemas.map((schema, index) => (
         <JsonLd key={index} data={schema} />
       ))}
@@ -84,6 +91,19 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+            <PublicStockHeroImage {...hero} className="max-lg:max-h-[min(34vh,18rem)] w-full lg:min-h-[14rem]" priority />
+            <div className="relative hidden min-h-[12rem] overflow-hidden rounded-[2rem] border border-white/80 bg-slate-200 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.3)] lg:block">
+              <Image
+                src={heroVisual}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 0vw, 36vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tl from-primary/25 via-transparent to-sky-300/15" aria-hidden />
+            </div>
           </div>
         </section>
 
@@ -143,6 +163,6 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
         </section>
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }

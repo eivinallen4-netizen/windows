@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignJustify,
@@ -18,6 +19,8 @@ import {
   Send,
   Sparkles,
   Square,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +44,7 @@ import {
 } from "@/lib/public-business";
 import { computeQuote, type AddOnSelection, type QuoteSelections } from "@/lib/quote";
 import { defaultScheduleWindows, type ScheduleWindowsConfig } from "@/lib/schedule-types";
+import { storedMediaToDisplayUrl } from "@/lib/stored-media-url";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +118,15 @@ type AppConfig = {
     };
   };
 };
+
+const SITE_IMAGE_STORAGE_PREFIX = {
+  hero: "site-media-hero-bg",
+  backdrop: "site-media-page-bg",
+  "service-gallery": "site-media-gallery",
+  "random-bg": "site-media-accent",
+} as const;
+
+type SiteImageUploadSlot = keyof typeof SITE_IMAGE_STORAGE_PREFIX;
 
 type ContactRecord = {
   id: string;
@@ -259,8 +272,19 @@ export default function AdminPage() {
   const [repCommissionPercent, setRepCommissionPercent] = useState(25);
   const [scheduleWindows, setScheduleWindows] = useState<ScheduleWindowsConfig>(defaultScheduleWindows);
   const [publicBusiness, setPublicBusiness] = useState<PublicBusinessConfig>(defaultPublicBusinessConfig);
+  const [siteImageBusy, setSiteImageBusy] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<
-    "quotes" | "reps" | "reviews" | "jobs" | "schedule" | "pricing" | "business" | "addons" | "email" | "users"
+    | "quotes"
+    | "reps"
+    | "reviews"
+    | "jobs"
+    | "schedule"
+    | "pricing"
+    | "business"
+    | "addons"
+    | "email"
+    | "users"
+    | "danger"
   >("quotes");
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1442,6 +1466,29 @@ export default function AdminPage() {
     }));
   }
 
+  function renormalizePublicBusiness(partial: Partial<PublicBusinessConfig>) {
+    setPublicBusiness((current) =>
+      normalizePublicBusinessConfig({ ...current, ...partial }, scheduleWindows.rep),
+    );
+  }
+
+  async function postSiteImage(file: File, busyKey: SiteImageUploadSlot) {
+    setSiteImageBusy(busyKey);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("prefix", SITE_IMAGE_STORAGE_PREFIX[busyKey]);
+      const response = await fetch("/api/admin/site-image", { method: "POST", body });
+      const payload = (await response.json()) as { error?: string; url?: string };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || "Upload failed.");
+      }
+      return payload.url;
+    } finally {
+      setSiteImageBusy(null);
+    }
+  }
+
   function copyRepTimeframesToPublishedHours() {
     setPublicBusiness((current) => normalizePublicBusinessConfig({
       ...current,
@@ -1605,55 +1652,55 @@ export default function AdminPage() {
                   style={{ borderColor: COLORS.borderDark }}
                 >
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black text-white"
                     style={{ background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.sky})` }}
                   >
                     {rep.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-bold text-white">{rep.name}</p>
+                    <p className="font-bold text-slate-900">{rep.name}</p>
                     <p className="text-xs" style={{ color: COLORS.textMuted2 }}>
                       {rep.email}
                     </p>
                   </div>
                 </div>
                 <div
-                  className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0"
+                  className="grid grid-cols-2 divide-x divide-y border-t border-slate-200 md:grid-cols-4 md:divide-y-0"
                   style={{ borderColor: COLORS.borderDark }}
                 >
-                  <div className="px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: COLORS.textMuted2 }}>
+                  <div className="bg-slate-50/80 px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
+                    <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: COLORS.textMuted2 }}>
                       Quotes
                     </p>
-                    <p className="text-2xl font-black text-white">{rep.quoteCount}</p>
-                    <p className="text-xs text-indigo-400 mt-0.5">
+                    <p className="text-2xl font-black text-slate-900">{rep.quoteCount}</p>
+                    <p className="mt-0.5 text-xs font-medium text-indigo-700">
                       ${rep.quoteRevenue.toLocaleString()} value
                     </p>
                   </div>
-                  <div className="px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: COLORS.textMuted2 }}>
+                  <div className="bg-slate-50/80 px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
+                    <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: COLORS.textMuted2 }}>
                       Bookings
                     </p>
-                    <p className="text-2xl font-black text-white">{rep.bookingCount}</p>
-                    <p className="text-xs text-sky-400 mt-0.5">
+                    <p className="text-2xl font-black text-slate-900">{rep.bookingCount}</p>
+                    <p className="mt-0.5 text-xs font-medium text-sky-700">
                       ${rep.bookingRevenue.toLocaleString()} booked
                     </p>
                   </div>
-                  <div className="px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: COLORS.textMuted2 }}>
+                  <div className="bg-slate-50/80 px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
+                    <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: COLORS.textMuted2 }}>
                       Commission
                     </p>
-                    <p className="text-2xl font-black text-white">
+                    <p className="text-2xl font-black text-slate-900">
                       ${repCommission.toLocaleString()}
                     </p>
-                    <p className="text-xs text-emerald-400 mt-0.5">{repCommissionPercent}% rate</p>
+                    <p className="mt-0.5 text-xs font-medium text-emerald-800">{repCommissionPercent}% rate</p>
                   </div>
-                  <div className="px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: COLORS.textMuted2 }}>
+                  <div className="bg-slate-50/80 px-6 py-4" style={{ borderColor: COLORS.borderDark }}>
+                    <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: COLORS.textMuted2 }}>
                       Company Net
                     </p>
-                    <p className="text-2xl font-black text-white">${repNet.toLocaleString()}</p>
-                    <p className="text-xs text-amber-400 mt-0.5">After commission</p>
+                    <p className="text-2xl font-black text-slate-900">${repNet.toLocaleString()}</p>
+                    <p className="mt-0.5 text-xs font-medium text-amber-800">After commission</p>
                   </div>
                 </div>
               </div>
@@ -1701,11 +1748,11 @@ export default function AdminPage() {
             className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10"
             style={{ background: card.color, transform: "translate(25%, -25%)" }}
           />
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: card.color }}>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: card.color }}>
             {card.label}
           </p>
-          <p className="text-3xl font-black text-white">{card.value}</p>
-          <p className="text-xs mt-1" style={{ color: COLORS.textMuted }}>
+          <p className="text-3xl font-black text-slate-900">{card.value}</p>
+          <p className="mt-1 text-xs font-medium" style={{ color: COLORS.textMuted }}>
             {card.sub}
           </p>
         </div>
@@ -1724,6 +1771,7 @@ export default function AdminPage() {
     { id: "addons", label: "Add-ons" },
     { id: "email", label: "Leads" },
     { id: "users", label: "Users" },
+    { id: "danger", label: "Reset DB" },
   ] as const;
 
   if (authLoading) {
@@ -2943,6 +2991,329 @@ export default function AdminPage() {
 
           <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
             <CardHeader>
+              <CardTitle>Site imagery</CardTitle>
+              <CardDescription>
+                Hero and full-page background images, the homepage photo strip, and mid-page accent backgrounds for the quote
+                landing page and public marketing pages. Uploads use the same storage as review photos; you can also paste a
+                direct image URL.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-10">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900">Hero background image</p>
+                <p className="text-xs text-slate-500">
+                  Full-viewport photo behind the quote page hero (headline, bullets, and form). Uses the default stock image when
+                  empty. Blended with overlays for readability.
+                </p>
+                {publicBusiness.heroBackgroundImageUrl ? (
+                  <div className="relative h-32 w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                    <Image
+                      src={storedMediaToDisplayUrl(publicBusiness.heroBackgroundImageUrl)}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="site-hero-bg-upload"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) {
+                        return;
+                      }
+                      void (async () => {
+                        try {
+                          const url = await postSiteImage(file, "hero");
+                          renormalizePublicBusiness({ heroBackgroundImageUrl: url });
+                          setToast("Hero background updated.");
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Upload failed.");
+                        }
+                      })();
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={siteImageBusy === "hero"}
+                    onClick={() => document.getElementById("site-hero-bg-upload")?.click()}
+                  >
+                    <Upload className="mr-2 size-4" />
+                    {siteImageBusy === "hero" ? "Uploading…" : "Upload background"}
+                  </Button>
+                  {publicBusiness.heroBackgroundImageUrl ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => updatePublicBusiness("heroBackgroundImageUrl", "")}>
+                      <Trash2 className="mr-2 size-4" />
+                      Remove
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="site-hero-bg-url">Hero background URL (optional)</Label>
+                  <Input
+                    id="site-hero-bg-url"
+                    value={publicBusiness.heroBackgroundImageUrl}
+                    onChange={(event) => updatePublicBusiness("heroBackgroundImageUrl", event.target.value)}
+                    placeholder="https://… or leave blank"
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900">Full-page background image</p>
+                <p className="text-xs text-slate-500">
+                  Subtle texture across the full viewport on marketing pages and the quote page (heavily faded; use a soft or
+                  low-contrast photo).
+                </p>
+                {publicBusiness.pageBackdropImageUrl ? (
+                  <div className="relative h-28 w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                    <Image
+                      src={storedMediaToDisplayUrl(publicBusiness.pageBackdropImageUrl)}
+                      alt=""
+                      fill
+                      className="object-cover opacity-90"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="site-page-backdrop-upload"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) {
+                        return;
+                      }
+                      void (async () => {
+                        try {
+                          const url = await postSiteImage(file, "backdrop");
+                          renormalizePublicBusiness({ pageBackdropImageUrl: url });
+                          setToast("Full-page background updated.");
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Upload failed.");
+                        }
+                      })();
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={siteImageBusy === "backdrop"}
+                    onClick={() => document.getElementById("site-page-backdrop-upload")?.click()}
+                  >
+                    <Upload className="mr-2 size-4" />
+                    {siteImageBusy === "backdrop" ? "Uploading…" : "Upload background"}
+                  </Button>
+                  {publicBusiness.pageBackdropImageUrl ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => updatePublicBusiness("pageBackdropImageUrl", "")}>
+                      <Trash2 className="mr-2 size-4" />
+                      Remove
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="site-page-backdrop-url">Full-page background URL (optional)</Label>
+                  <Input
+                    id="site-page-backdrop-url"
+                    value={publicBusiness.pageBackdropImageUrl}
+                    onChange={(event) => updatePublicBusiness("pageBackdropImageUrl", event.target.value)}
+                    placeholder="https://… or leave blank"
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">Service / gallery images</p>
+                  <p className="text-xs text-slate-500">
+                    {publicBusiness.serviceSectionImageUrls.length} / 12
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">Horizontal gallery on the homepage (after the &quot;What&apos;s included&quot; block).</p>
+                <div className="flex flex-wrap gap-3">
+                  {publicBusiness.serviceSectionImageUrls.map((url, index) => (
+                    <div key={`${url}-${index}`} className="relative h-24 w-36 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                      <Image src={storedMediaToDisplayUrl(url)} alt="" fill className="object-cover" unoptimized />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        className="absolute right-1 top-1 size-8 rounded-full shadow-md"
+                        onClick={() =>
+                          setPublicBusiness((current) =>
+                            normalizePublicBusinessConfig(
+                              {
+                                ...current,
+                                serviceSectionImageUrls: current.serviceSectionImageUrls.filter((_, i) => i !== index),
+                              },
+                              scheduleWindows.rep,
+                            ),
+                          )
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {publicBusiness.serviceSectionImageUrls.length < 12 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="site-service-gallery-upload"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (!file) {
+                          return;
+                        }
+                        void (async () => {
+                          try {
+                            const url = await postSiteImage(file, "service-gallery");
+                            setPublicBusiness((current) =>
+                              normalizePublicBusinessConfig(
+                                {
+                                  ...current,
+                                  serviceSectionImageUrls: [...current.serviceSectionImageUrls, url],
+                                },
+                                scheduleWindows.rep,
+                              ),
+                            );
+                            setToast("Image added to gallery.");
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Upload failed.");
+                          }
+                        })();
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={siteImageBusy === "service-gallery"}
+                      onClick={() => document.getElementById("site-service-gallery-upload")?.click()}
+                    >
+                      <Upload className="mr-2 size-4" />
+                      {siteImageBusy === "service-gallery" ? "Uploading…" : "Add image"}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">Remove an image to add more (max 12).</p>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">Mid-page accent background images</p>
+                  <p className="text-xs text-slate-500">
+                    {publicBusiness.randomBackgroundImageUrls.length} / 24
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Pool of images; each visit picks one at random for the mid-page accent section (client-only random choice, so
+                  server HTML stays stable).
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {publicBusiness.randomBackgroundImageUrls.map((url, index) => (
+                    <div key={`${url}-${index}`} className="relative h-24 w-36 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                      <Image src={storedMediaToDisplayUrl(url)} alt="" fill className="object-cover" unoptimized />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        className="absolute right-1 top-1 size-8 rounded-full shadow-md"
+                        onClick={() =>
+                          setPublicBusiness((current) =>
+                            normalizePublicBusinessConfig(
+                              {
+                                ...current,
+                                randomBackgroundImageUrls: current.randomBackgroundImageUrls.filter((_, i) => i !== index),
+                              },
+                              scheduleWindows.rep,
+                            ),
+                          )
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {publicBusiness.randomBackgroundImageUrls.length < 24 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="site-random-bg-upload"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (!file) {
+                          return;
+                        }
+                        void (async () => {
+                          try {
+                            const url = await postSiteImage(file, "random-bg");
+                            setPublicBusiness((current) =>
+                              normalizePublicBusinessConfig(
+                                {
+                                  ...current,
+                                  randomBackgroundImageUrls: [...current.randomBackgroundImageUrls, url],
+                                },
+                                scheduleWindows.rep,
+                              ),
+                            );
+                            setToast("Image added to accent pool.");
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Upload failed.");
+                          }
+                        })();
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={siteImageBusy === "random-bg"}
+                      onClick={() => document.getElementById("site-random-bg-upload")?.click()}
+                    >
+                      <Upload className="mr-2 size-4" />
+                      {siteImageBusy === "random-bg" ? "Uploading…" : "Add to pool"}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">Remove an image to add more (max 24).</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg border border-slate-200 bg-white text-slate-900">
+            <CardHeader>
               <CardTitle>GBP Alignment Targets</CardTitle>
               <CardDescription>Keep Google Business Profile wording aligned with the public site when verification is complete.</CardDescription>
             </CardHeader>
@@ -3028,9 +3399,10 @@ export default function AdminPage() {
           </Card>
           ) : null}
 
-          <Card className="mt-8 border border-rose-200 bg-rose-50/80 text-slate-900 shadow-sm">
+          {activeSection === "danger" ? (
+          <Card className="border border-rose-200 bg-rose-50/80 text-slate-900 shadow-sm">
             <CardHeader>
-              <CardTitle>Danger Zone</CardTitle>
+              <CardTitle>Danger zone</CardTitle>
               <CardDescription>
                 Clear jobs, transactions, contacts, quotes, schedules, bookings, and reset app config defaults.
                 Users and reviews stay untouched.
@@ -3060,6 +3432,7 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
+          ) : null}
         </div>
       </div>
       </div>

@@ -1,9 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
+import { PublicMarketingShell } from "@/components/public-marketing-shell";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { PublicStockHeroImage } from "@/components/public-stock-hero-image";
 import { Button } from "@/components/ui/button";
+import { getPublicPageStockHero, landingServiceImageForSlug } from "@/lib/landing-stock-media";
 import { BUSINESS, SERVICE_LINKS, SERVICE_PAGES, TRUST_POINTS } from "@/lib/marketing-content";
 import { readPublicBusinessSnapshot } from "@/lib/public-business.server";
 import { buildBreadcrumbSchema, buildPageMetadata, buildServiceSchema } from "@/lib/seo";
@@ -23,6 +27,7 @@ export const metadata = buildPageMetadata({
 
 export default async function ServicesPage() {
   const businessInfo = await readPublicBusinessSnapshot();
+  const hero = getPublicPageStockHero("services");
   const schemas = [
     buildBreadcrumbSchema([
       { name: "Home", path: "/" },
@@ -38,7 +43,7 @@ export default async function ServicesPage() {
   ];
 
   return (
-    <div className="app-page-shell-soft">
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
       {schemas.map((schema, index) => (
         <JsonLd key={index} data={schema} />
       ))}
@@ -61,14 +66,26 @@ export default async function ServicesPage() {
               </Link>
             </Button>
           </div>
+          <PublicStockHeroImage {...hero} className="mt-8 max-w-4xl" priority />
         </section>
 
         <section className="mt-8 grid gap-5 lg:grid-cols-3">
           {SERVICE_PAGES.map((service) => (
             <article
               key={service.slug}
-              className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+              className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
             >
+              <div className="relative h-40 w-full bg-slate-200">
+                <Image
+                  src={landingServiceImageForSlug(service.slug)}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/25 to-transparent" aria-hidden />
+              </div>
+              <div className="px-6 py-7">
               <p className="app-kicker">{service.shortLabel}</p>
               <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">{service.title}</h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground">{service.summary}</p>
@@ -86,6 +103,7 @@ export default async function ServicesPage() {
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
+              </div>
             </article>
           ))}
         </section>
@@ -137,6 +155,6 @@ export default async function ServicesPage() {
         </section>
       </main>
       <PublicSiteFooter businessInfo={businessInfo} />
-    </div>
+    </PublicMarketingShell>
   );
 }
