@@ -60,13 +60,13 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
   const heroVisual = landingServiceImageForSlug("residential-window-cleaning");
 
   return (
-    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl} theme="dark">
       {schemas.map((schema, index) => (
         <JsonLd key={index} data={schema} />
       ))}
-      <PublicSiteHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
-        <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
+      <PublicSiteHeader theme="dark" />
+      <main className="marketing-container py-10 sm:py-14 lg:py-18">
+        <section className="marketing-panel-dark px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-4xl space-y-5">
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Link href="/" className="transition hover:text-primary">
@@ -79,13 +79,13 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
               <span>/</span>
               <span className="text-foreground">{area.title.replace(", NV", "")}</span>
             </nav>
-            <span className="app-kicker">Local Page</span>
-            <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">{area.title}</h1>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">{area.intro}</p>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground">
+            <span className="marketing-kicker">Local Page</span>
+            <h1 className="marketing-display-lg text-white">{area.title}</h1>
+            <p className="max-w-3xl text-base leading-7 text-white/72 sm:text-lg">{area.intro}</p>
+            <p className="max-w-3xl text-base leading-7 text-white/68">
               Serving Las Vegas since {businessInfo.servingSinceYear}. {businessInfo.callOnly ? "Call to book." : ""} {businessInfo.serviceAreaBusiness ? "No storefront at this time." : ""}
             </p>
-            <Button asChild size="lg" className="rounded-full px-8 text-base">
+            <Button asChild size="lg" className="marketing-button-primary border-0 px-8 text-base">
               <Link href={BUSINESS.quotePath}>
                 Request a Call
                 <ArrowRight className="size-4" />
@@ -162,7 +162,7 @@ export default async function ServiceAreaPage({ params }: ServiceAreaPageProps) 
           </div>
         </section>
       </main>
-      <PublicSiteFooter businessInfo={businessInfo} />
+      <PublicSiteFooter businessInfo={businessInfo} theme="dark" />
     </PublicMarketingShell>
   );
 }

@@ -13,7 +13,7 @@ export function PublicStockHeroImage({ src, alt, className, priority, sizes }: P
   return (
     <div
       className={cn(
-        "relative aspect-[16/9] max-h-[min(36vh,19rem)] w-full overflow-hidden rounded-[2rem] border border-white/80 bg-slate-200 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] sm:aspect-[2/1] sm:max-h-[min(40vh,22rem)]",
+        "relative aspect-[16/10] max-h-[min(42vh,24rem)] w-full overflow-hidden rounded-sm border border-white/10 bg-slate-200 shadow-[0_24px_60px_-42px_rgba(8,15,26,0.45)] sm:aspect-[2/1] sm:max-h-[min(42vh,24rem)]",
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function PublicStockHeroImage({ src, alt, className, priority, sizes }: P
         priority={priority}
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-primary/18 via-transparent to-sky-400/12"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.18),rgba(2,6,23,0.52))]"
         aria-hidden
       />
     </div>

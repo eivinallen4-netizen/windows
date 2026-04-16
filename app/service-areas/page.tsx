@@ -29,26 +29,26 @@ export default async function ServiceAreasPage() {
   const hero = getPublicPageStockHero("serviceAreas");
 
   return (
-    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl} theme="dark">
       <JsonLd
         data={buildBreadcrumbSchema([
           { name: "Home", path: "/" },
           { name: "Service Areas", path: "/service-areas" },
         ])}
       />
-      <PublicSiteHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
-        <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
+      <PublicSiteHeader theme="dark" />
+      <main className="marketing-container py-10 sm:py-14 lg:py-18">
+        <section className="marketing-panel-dark px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-4xl space-y-5">
-            <span className="app-kicker">Service Areas</span>
-            <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">
+            <span className="marketing-kicker">Service Areas</span>
+            <h1 className="marketing-display-lg text-white">
               Local Coverage Across Las Vegas and Nearby Areas
             </h1>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+            <p className="max-w-3xl text-base leading-7 text-white/72 sm:text-lg">
               You should see the same service areas and neighborhood names whether you start on the homepage, the footer, or a local
               page—so there is no confusion about coverage before you call.
             </p>
-            <Button asChild size="lg" className="rounded-full px-8 text-base">
+            <Button asChild size="lg" className="marketing-button-primary border-0 px-8 text-base">
               <Link href={BUSINESS.quotePath}>
                 Request a Call
                 <ArrowRight className="size-4" />
@@ -63,7 +63,7 @@ export default async function ServiceAreasPage() {
             <Link
               key={link.href}
               href={link.href}
-              className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)] transition hover:border-primary/30"
+              className="marketing-panel-light overflow-hidden transition hover:border-primary/30"
             >
               <div className="relative h-40 w-full bg-slate-200">
                 <Image
@@ -77,7 +77,7 @@ export default async function ServiceAreasPage() {
               </div>
               <div className="flex items-start justify-between gap-4 px-6 py-7">
                 <div>
-                  <p className="app-kicker">Featured Area</p>
+                  <p className="marketing-kicker">Featured Area</p>
                   <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">{link.label}</h2>
                   <p className="mt-4 text-base leading-7 text-muted-foreground">
                     A focused Las Vegas overview with neighborhood context and clear next steps when you need window cleaning in the
@@ -92,18 +92,18 @@ export default async function ServiceAreasPage() {
           ))}
         </section>
 
-        <section className="mt-10 rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-          <p className="app-kicker">Covered Areas</p>
+        <section className="marketing-panel-light mt-10 px-6 py-7">
+          <p className="marketing-kicker">Covered Areas</p>
           <div className="mt-5 flex flex-wrap gap-3">
             {BUSINESS.serviceAreas.map((area) => (
-              <span key={area} className="app-chip">
+              <span key={area} className="marketing-chip-light">
                 {area}
               </span>
             ))}
           </div>
         </section>
       </main>
-      <PublicSiteFooter businessInfo={businessInfo} />
+      <PublicSiteFooter businessInfo={businessInfo} theme="dark" />
     </PublicMarketingShell>
   );
 }

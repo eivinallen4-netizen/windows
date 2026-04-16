@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -56,6 +57,7 @@
   --lovable-bg: #1b1b1b;
   --lovable-text: #c5c1b9;
   --lovable-text-hover: #dcdad5;
+  --font-display: "Bebas Neue", "Arial Narrow", system-ui, sans-serif;
 
   --font-geist-sans: "CameraPlainVariable";
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -187,6 +189,200 @@
 
   .app-brand-strip {
     @apply h-2 w-full bg-gradient-to-r from-primary via-sky-400 to-cyan-300;
+  }
+
+  .marketing-site {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, rgba(18, 91, 255, 0.14), transparent 26%),
+      linear-gradient(180deg, #071018 0%, #08090c 48%, #0b0c0f 100%);
+    color: #f7faff;
+  }
+
+  .marketing-page {
+    background:
+      radial-gradient(circle at top, rgba(18, 91, 255, 0.12), transparent 24%),
+      linear-gradient(180deg, #071018 0%, #08090c 48%, #0b0c0f 100%);
+    color: #f7faff;
+  }
+
+  .marketing-page-light {
+    background:
+      radial-gradient(circle at top, rgba(18, 91, 255, 0.08), transparent 26%),
+      linear-gradient(180deg, #f3f1ec 0%, #ebe8e2 100%);
+    color: #0d1016;
+  }
+
+  .marketing-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .marketing-section-light {
+    background: #f3f1ec;
+    color: #0f1218;
+  }
+
+  .marketing-section-dark {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+      #0b0c0f;
+    color: #f7faff;
+  }
+
+  .marketing-kicker {
+    color: #125bff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+  }
+
+  .marketing-display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+  }
+
+  .marketing-display-xl {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+    line-height: 0.88;
+    font-size: clamp(3.8rem, 8vw, 7.3rem);
+  }
+
+  .marketing-display-lg {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: -0.022em;
+    line-height: 0.9;
+    font-size: clamp(2.7rem, 4.3vw, 4.8rem);
+  }
+
+  .marketing-display-md {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.94;
+    font-size: clamp(2rem, 3vw, 3.25rem);
+  }
+
+  .marketing-body-dark {
+    color: rgba(241, 245, 251, 0.74);
+  }
+
+  .marketing-body-light {
+    color: #585e67;
+  }
+
+  .marketing-card-light {
+    border: 1px solid rgba(15, 18, 24, 0.09);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 16px 40px -30px rgba(15, 23, 42, 0.28);
+  }
+
+  .marketing-card-dark {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: none;
+  }
+
+  .marketing-panel-dark {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+      rgba(255, 255, 255, 0.03);
+    color: #f7faff;
+    box-shadow: 0 24px 60px -42px rgba(8, 15, 26, 0.55);
+  }
+
+  .marketing-panel-light {
+    border: 1px solid rgba(15, 18, 24, 0.09);
+    background: rgba(255, 255, 255, 0.96);
+    color: #10141b;
+    box-shadow: 0 16px 40px -30px rgba(15, 23, 42, 0.24);
+  }
+
+  .marketing-chip-dark {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.7rem 1rem;
+    color: rgba(247, 250, 255, 0.92);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .marketing-chip-light {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.7rem;
+    border: 1px solid rgba(15, 18, 24, 0.11);
+    background: rgba(255, 255, 255, 0.96);
+    padding: 0.7rem 1rem;
+    color: #10141b;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .marketing-button-primary {
+    min-height: 3rem;
+    border-radius: 0;
+    background: #125bff;
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .marketing-button-primary:hover {
+    background: #0f4fe0;
+  }
+
+  .marketing-button-secondary {
+    min-height: 3rem;
+    border-radius: 0;
+    border: 1px solid currentColor;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .marketing-divider {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .marketing-form-input {
+    min-height: 3rem;
+    border-radius: 0;
+    border-color: rgba(15, 18, 24, 0.12);
+    background: #fff;
+    color: #0f1218;
+    box-shadow: none;
+  }
+
+  .marketing-form-input::placeholder {
+    color: #7a8089;
+  }
+
+  .marketing-form-input:focus-visible {
+    border-color: rgba(18, 91, 255, 0.58);
+    box-shadow: 0 0 0 3px rgba(18, 91, 255, 0.12);
+  }
+
+  .marketing-form-emphasis {
+    border-color: rgba(18, 91, 255, 0.32);
+    background: rgba(18, 91, 255, 0.05);
   }
 
   .schedule-shift-card {

@@ -3,10 +3,10 @@
  * License: https://unsplash.com/license
  */
 export const LANDING_HERO_IMAGE =
-  "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=80";
+  "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1600&q=80";
 
 export const LANDING_FORM_HEADER_IMAGE =
-  "https://images.unsplash.com/photo-1600607687920-4e2a09cf1592?auto=format&fit=crop&w=1200&q=80";
+  "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80";
 
 /** Matches the three “What’s included” cards in order. */
 export const LANDING_INCLUDED_IMAGES = [
@@ -17,11 +17,11 @@ export const LANDING_INCLUDED_IMAGES = [
 
 export const LANDING_SERVICE_IMAGES: Record<string, string> = {
   "residential-window-cleaning":
-    "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80",
   "commercial-window-cleaning":
-    "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=80",
   "high-rise-window-cleaning":
-    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1000&q=80",
 };
 
 export const LANDING_GALLERY_STRIP = [
@@ -44,15 +44,15 @@ export function landingServiceImageForSlug(slug: string): string {
 /** Hero photo + alt text for public marketing pages (not admin). */
 export const PUBLIC_PAGE_STOCK_HERO = {
   about: {
-    src: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1497366412874-3415097a27e7?auto=format&fit=crop&w=1600&q=80",
     alt: "Professionals planning reliable service together",
   },
   faq: {
-    src: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80",
     alt: "Cleaning tools and supplies for spotless glass",
   },
   pricing: {
-    src: "https://images.unsplash.com/photo-1600047509358-9dc950cc20bb?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
     alt: "Modern Las Vegas area home with clear windows",
   },
   services: {
@@ -60,23 +60,23 @@ export const PUBLIC_PAGE_STOCK_HERO = {
     alt: "Bright home exterior with clean windows",
   },
   howItWorks: {
-    src: "https://images.unsplash.com/photo-1600880292083-8cea1a974ea7?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80",
     alt: "Team coordinating a clear step-by-step service",
   },
   serviceAreas: {
-    src: "https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80",
     alt: "Las Vegas valley skyline at dusk",
   },
   serviceAreaLocal: {
-    src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1600&q=80",
     alt: "Comfortable Las Vegas valley home interior with natural light",
   },
   reviews: {
-    src: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
     alt: "Sunlit living space with bright windows",
   },
   beforeAfter: {
-    src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=80",
+    src: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1600&q=80",
     alt: "Home with polished windows and curb appeal",
   },
 } as const;
@@ -89,4 +89,4 @@ export function getPublicPageStockHero(key: PublicPageStockHeroKey) {
 
 /** Small banner for service-area hub cards. */
 export const PUBLIC_SERVICE_AREA_HUB_CARD_IMAGE =
-  "https://images.unsplash.com/photo-1596436889106-eb8a0a0ae4a1?auto=format&fit=crop&w=1000&q=80";
+  "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1000&q=80";

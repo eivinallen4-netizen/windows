@@ -8,7 +8,7 @@ export const BUSINESS = {
   country: "US",
   primaryLocation: "Las Vegas, NV",
   description:
-    "Window cleaning in Las Vegas with clear pricing, before-and-after proof, and final approval before payment.",
+    "Professional window cleaning in Las Vegas. Fast quotes. Clear pricing. Streak-free results.",
   quotePath: "/#quote-form",
   serviceAreas: [
     "Las Vegas",

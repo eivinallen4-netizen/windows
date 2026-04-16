@@ -43,23 +43,23 @@ export default async function ServicesPage() {
   ];
 
   return (
-    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl}>
+    <PublicMarketingShell backgroundImageUrl={businessInfo.pageBackdropImageUrl} theme="dark">
       {schemas.map((schema, index) => (
         <JsonLd key={index} data={schema} />
       ))}
-      <PublicSiteHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
-        <section className="app-surface-panel px-6 py-10 sm:px-10 sm:py-12">
+      <PublicSiteHeader theme="dark" />
+      <main className="marketing-container py-10 sm:py-14 lg:py-18">
+        <section className="marketing-panel-dark px-6 py-10 sm:px-10 sm:py-12">
           <div className="max-w-4xl space-y-5">
-            <span className="app-kicker">Services</span>
-            <h1 className="text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl">
+            <span className="marketing-kicker">Services</span>
+            <h1 className="marketing-display-lg text-white">
               Window Cleaning Services for Las Vegas Homes and Businesses
             </h1>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+            <p className="max-w-3xl text-base leading-7 text-white/72 sm:text-lg">
               Dedicated pages for homeowners, businesses, storefronts, and difficult-access jobs so you can read the right details
               and request a quote without guessing which service fits.
             </p>
-            <Button asChild size="lg" className="rounded-full px-8 text-base">
+            <Button asChild size="lg" className="marketing-button-primary border-0 px-8 text-base">
               <Link href={BUSINESS.quotePath}>
                 Request a Call
                 <ArrowRight className="size-4" />
@@ -73,7 +73,7 @@ export default async function ServicesPage() {
           {SERVICE_PAGES.map((service) => (
             <article
               key={service.slug}
-              className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/94 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]"
+              className="marketing-panel-light overflow-hidden"
             >
               <div className="relative h-40 w-full bg-slate-200">
                 <Image
@@ -86,8 +86,8 @@ export default async function ServicesPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/25 to-transparent" aria-hidden />
               </div>
               <div className="px-6 py-7">
-              <p className="app-kicker">{service.shortLabel}</p>
-              <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">{service.title}</h2>
+              <p className="marketing-kicker">{service.shortLabel}</p>
+              <h2 className="marketing-display-md mt-4 text-slate-950">{service.title}</h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground">{service.summary}</p>
               <div className="mt-5 grid gap-3">
                 {service.highlights.map((highlight) => (
@@ -97,7 +97,7 @@ export default async function ServicesPage() {
                   </div>
                 ))}
               </div>
-              <Button asChild className="mt-6 rounded-full px-6">
+              <Button asChild className="marketing-button-primary mt-6 border-0 bg-[#125bff] px-6 text-white shadow-none hover:bg-[#0f4fe0] hover:text-white">
                 <Link href={`/services/${service.slug}`}>
                   Read More
                   <ArrowRight className="size-4" />
@@ -109,8 +109,8 @@ export default async function ServicesPage() {
         </section>
 
         <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">Why Separate Pages</p>
+          <div className="marketing-panel-light px-6 py-7">
+            <p className="marketing-kicker">Why Separate Pages</p>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">Find the service that matches your property</h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
               Residential glass, storefronts, offices, and high-access buildings are not the same job. When each has its own page,
@@ -124,8 +124,8 @@ export default async function ServicesPage() {
               Serving Las Vegas since {businessInfo.servingSinceYear}. {businessInfo.callOnly ? "Call to book." : ""} {businessInfo.serviceAreaBusiness ? "No storefront at this time." : ""}
             </p>
           </div>
-          <div className="rounded-[2rem] border border-white/80 bg-white/94 px-6 py-7 shadow-[0_22px_60px_-42px_rgba(15,23,42,0.28)]">
-            <p className="app-kicker">Trust Signals</p>
+          <div className="marketing-panel-light px-6 py-7">
+            <p className="marketing-kicker">Trust Signals</p>
             <div className="mt-5 grid gap-3">
               {TRUST_POINTS.map((item) => (
                 <div key={item} className="rounded-[1.4rem] border border-border bg-background px-4 py-4 text-base font-semibold text-foreground">
@@ -136,17 +136,17 @@ export default async function ServicesPage() {
           </div>
         </section>
 
-        <section className="mt-10 rounded-[2.4rem] border border-primary/15 bg-[linear-gradient(135deg,rgba(11,111,178,0.12),rgba(255,255,255,0.94)_46%,rgba(56,189,248,0.12))] px-6 py-10 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.34)] sm:px-10">
+        <section className="mt-10 border border-white/12 bg-white/4 px-6 py-10 sm:px-10">
           <div className="max-w-3xl space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Explore More</p>
-            <h2 className="text-4xl font-black tracking-tight text-foreground">Related pages that round out the picture</h2>
-            <p className="text-base leading-7 text-muted-foreground">
+            <p className="marketing-kicker">Explore More</p>
+            <h2 className="marketing-display-md text-white">Related pages that round out the picture</h2>
+            <p className="text-base leading-7 text-white/70">
               Reviews, FAQs, before-and-after photos, and the Las Vegas service-area overview all add context next to these service
               pages—so you can book with fewer open questions.
             </p>
             <div className="flex flex-wrap gap-3">
               {SERVICE_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="app-link-pill">
+                <Link key={link.href} href={link.href} className="marketing-button-secondary border border-white/20 px-4 text-white hover:bg-white/6">
                   {link.label}
                 </Link>
               ))}
@@ -154,7 +154,7 @@ export default async function ServicesPage() {
           </div>
         </section>
       </main>
-      <PublicSiteFooter businessInfo={businessInfo} />
+      <PublicSiteFooter businessInfo={businessInfo} theme="dark" />
     </PublicMarketingShell>
   );
 }

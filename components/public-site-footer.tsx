@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, PhoneCall } from "lucide-react";
-import { BUSINESS, SERVICE_AREA_LINKS, SERVICE_LINKS } from "@/lib/marketing-content";
+import { BUSINESS } from "@/lib/marketing-content";
+import { cn } from "@/lib/utils";
 
 const footerLinks = [
   { href: "/services", label: "Services" },
@@ -13,7 +14,22 @@ const footerLinks = [
   { href: "/about", label: "About" },
 ];
 
+const teamLinks = [
+  { href: "/tech", label: "Tech" },
+  { href: "/admin", label: "Admin" },
+  { href: "/rep", label: "Rep" },
+  { href: "/careers", label: "Careers" },
+];
+
+const footerServiceLinks = [
+  { href: "/services/residential-window-cleaning", label: "Home Window Cleaning" },
+  { href: "/services/commercial-window-cleaning", label: "Storefront Cleaning" },
+  { href: "/services", label: "Interior & Exterior Glass" },
+  { href: "/services", label: "Tracks & Screens" },
+];
+
 type PublicSiteFooterProps = {
+  theme?: "dark" | "light";
   businessInfo?: {
     shortName: string;
     phone: string;
@@ -30,7 +46,7 @@ type PublicSiteFooterProps = {
   };
 };
 
-export function PublicSiteFooter({ businessInfo }: PublicSiteFooterProps) {
+export function PublicSiteFooter({ theme = "dark", businessInfo }: PublicSiteFooterProps) {
   const resolved = businessInfo ?? {
     shortName: BUSINESS.shortName,
     phone: BUSINESS.phone,
@@ -45,77 +61,95 @@ export function PublicSiteFooter({ businessInfo }: PublicSiteFooterProps) {
     publishedHoursSummary: ["Mon-Sun: 1:00 PM - 9:00 PM"],
     sameAs: [],
   };
+  const isDark = theme === "dark";
+  const muted = isDark ? "text-white/58" : "text-muted-foreground";
+  const linkTone = isDark ? "text-white/82 hover:text-white" : "text-foreground hover:text-primary";
+  const labelTone = isDark ? "text-[#125bff]" : "text-primary";
 
   return (
-    <footer className="border-t border-white/70 bg-white/72">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr_0.9fr_1fr] lg:px-8">
+    <footer className={cn("border-t", isDark ? "border-white/10 bg-[#0a0b0e]" : "border-black/10 bg-white")}>
+      <div className="marketing-container grid gap-10 py-14 lg:grid-cols-[1.15fr_0.8fr_0.95fr_0.75fr_1fr]">
         <div>
-          <p className="text-xl font-black tracking-tight text-foreground">{resolved.shortName}</p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-            Window cleaning for Las Vegas homeowners, storefronts, and commercial properties that want clear glass, clear pricing, and no hassle.
+          <p className={cn("marketing-display text-[2rem]", isDark ? "text-white" : "text-foreground")}>{resolved.shortName}</p>
+          <p className={cn("mt-4 max-w-sm text-sm leading-7", muted)}>
+            Professional window cleaning in Las Vegas. Fast quotes. Clear pricing. Streak-free results.
           </p>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
+          <p className={cn("mt-3 max-w-sm text-sm leading-7", muted)}>
             Serving {resolved.serviceAreas.join(", ")} since {resolved.servingSinceYear}.
           </p>
           {resolved.serviceAreaBusiness ? (
-            <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">Service-area business. No storefront at this time.</p>
+            <p className={cn("mt-3 max-w-sm text-sm leading-7", muted)}>Service-area business. No storefront at this time.</p>
           ) : null}
         </div>
+
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">Explore</p>
-          <div className="mt-4 grid gap-2 text-sm text-foreground">
+          <p className={cn("marketing-kicker", labelTone)}>Explore</p>
+          <div className="mt-5 grid gap-2 text-sm">
             {footerLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="transition hover:text-primary">
+              <Link key={link.href} href={link.href} className={cn("transition", linkTone)}>
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
+
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">Services</p>
-          <div className="mt-4 grid gap-2 text-sm text-foreground">
-            {SERVICE_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="transition hover:text-primary">
-                {link.label}
-              </Link>
-            ))}
-            {SERVICE_AREA_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="transition hover:text-primary">
+          <p className={cn("marketing-kicker", labelTone)}>Services</p>
+          <div className="mt-5 grid gap-2 text-sm">
+            {footerServiceLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={cn("transition", linkTone)}>
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
+
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">Contact info</p>
-          <div className="mt-4 grid gap-2 text-sm text-foreground">
-            <a href={`tel:${resolved.phone}`} className="inline-flex items-center gap-2 hover:text-primary">
+          <p className={cn("marketing-kicker", labelTone)}>Team</p>
+          <div className="mt-5 grid gap-2 text-sm">
+            {teamLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={cn("transition", linkTone)}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className={cn("marketing-kicker", labelTone)}>Contact</p>
+          <div className="mt-5 grid gap-2 text-sm">
+            <a href={`tel:${resolved.phone}`} className={cn("inline-flex items-center gap-2 transition", linkTone)}>
               <PhoneCall className="size-4" />
               {resolved.phoneDisplay}
             </a>
-            <p>{resolved.primaryLocation}</p>
-            {resolved.callOnly ? <p className="text-muted-foreground">Call to book. We do not have a storefront right now.</p> : null}
+            <p className={isDark ? "text-white/82" : "text-foreground"}>Call or text for a fast quote</p>
+            <p className={muted}>Serving Las Vegas &amp; nearby areas</p>
+            <p className={cn("text-sm", muted)}>{resolved.primaryLocation}</p>
+            {resolved.callOnly ? <p className={muted}>No storefront right now. Quotes start by phone or text.</p> : null}
             {resolved.licenseStatusPublic ? (
-              <p className="text-muted-foreground">
-                {resolved.insuredPublic ? "Licensed and insured business." : "Licensed business."}
-              </p>
+              <p className={muted}>{resolved.insuredPublic ? "Licensed and insured business." : "Licensed business."}</p>
             ) : null}
             {resolved.publishedHoursSummary.map((line) => (
-              <p key={line} className="text-muted-foreground">{line}</p>
+              <p key={line} className={muted}>
+                {line}
+              </p>
             ))}
             {resolved.sameAs.length ? (
               <div className="flex flex-col gap-2 pt-2">
                 {resolved.sameAs.map((link) => (
-                  <a key={link} href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 hover:text-primary">
+                  <a key={link} href={link} target="_blank" rel="noreferrer" className={cn("inline-flex items-center gap-2 transition", linkTone)}>
                     <ExternalLink className="size-4" />
                     {link.includes("instagram.com") ? "Instagram" : "Profile"}
                   </a>
                 ))}
               </div>
             ) : null}
-            <p className="pt-2 text-muted-foreground">You don&apos;t pay until you&apos;re 100% satisfied.</p>
+            <p className={cn("pt-2", muted)}>You don&apos;t pay until you&apos;re 100% satisfied.</p>
           </div>
         </div>
+      </div>
+      <div className={cn("marketing-container border-t py-5 text-center text-xs", isDark ? "border-white/10 text-white/38" : "border-black/10 text-foreground/45")}>
+        &copy; 2026 {BUSINESS.name}. All rights reserved.
       </div>
     </footer>
   );
