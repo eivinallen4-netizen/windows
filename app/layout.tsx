@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   applicationName: BUSINESS.name,
   icons: {
     // Tab icons: use multi-resolution .ico only — do not add wide logo.png as rel=icon or it dominates and scales down to a tiny mark.
-    icon: [{ url: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
-    shortcut: "/favicon.ico",
-    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+       icon: '/favicon.ico?v=2',
+
+
   },
   alternates: {
     canonical: "/",

@@ -10,6 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "sm" : "next-sitemap",
     "lint": "eslint",
     "migrate:turso": "node scripts/migrate-json-to-turso.mjs"
   },
@@ -23,6 +24,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "next-sitemap": "^4.2.3",
     "nodemailer": "^8.0.2",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",

@@ -85,8 +85,8 @@ export function PublicSiteFooter({ theme = "dark", businessInfo }: PublicSiteFoo
         <div>
           <p className={cn("marketing-kicker", labelTone)}>Explore</p>
           <div className="mt-5 grid gap-2 text-sm">
-            {footerLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={cn("transition", linkTone)}>
+            {footerLinks.map((link, key) => (
+              <Link key={key} href={link.href} className={cn("transition", linkTone)}>
                 {link.label}
               </Link>
             ))}
@@ -96,8 +96,8 @@ export function PublicSiteFooter({ theme = "dark", businessInfo }: PublicSiteFoo
         <div>
           <p className={cn("marketing-kicker", labelTone)}>Services</p>
           <div className="mt-5 grid gap-2 text-sm">
-            {footerServiceLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={cn("transition", linkTone)}>
+            {footerServiceLinks.map((link, key) => (
+              <Link key={key} href={link.href} className={cn("transition", linkTone)}>
                 {link.label}
               </Link>
             ))}
