@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = buildPageMetadata({
   title: "Window Cleaning Las Vegas",
   description:
-    "Las Vegas window cleaning for homes, storefronts, and commercial properties with clear pricing, review-backed proof, and approval before payment.",
+    "You need Your windows cleaned. We show everyone else on the block shiny your windows can get.",
   path: "/",
   keywords: [
     "window cleaning Las Vegas",
